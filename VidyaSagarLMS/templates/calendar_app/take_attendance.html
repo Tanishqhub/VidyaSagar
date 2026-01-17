@@ -1,0 +1,223 @@
+{% extends 'dashboard/base.html' %}
+{% load calendar_tags %}
+
+{% block content %}
+<div class="header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="fas fa-clipboard-check"></i> Take Attendance</h1>
+        <p class="text-muted">Record attendance for: {{ event.title }}</p>
+    </div>
+    <div>
+        <a href="{% url 'event_detail' event.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Event
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Attendance for {{ event.start_date|date:"l, F d, Y" }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Instructions:</strong> 
+                    Mark students as present/absent, record check-in/out times, and add remarks if needed.
+                    All fields are optional except attendance status.
+                </div>
+                
+                <form method="post" id="attendanceForm">
+                    {% csrf_token %}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="25%">Student</th>
+                                    <th width="15%">Attendance</th>
+                                    <th width="20%">Check-in Time</th>
+                                    <th width="20%">Check-out Time</th>
+                                    <th width="15%">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ student.username }}</strong><br>
+                                        <small class="text-muted">{{ student.email }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="attended_{{ student.id }}" 
+                                                   id="present_{{ student.id }}" 
+                                                   value="on" 
+                                                   {% if attendance_records|get_item:student.id and attendance_records|get_item:student.id.attended %}checked{% else %}checked{% endif %}>
+                                            <label class="form-check-label text-success" for="present_{{ student.id }}">
+                                                <i class="fas fa-check"></i> Present
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="attended_{{ student.id }}" 
+                                                   id="absent_{{ student.id }}" 
+                                                   value="off"
+                                                   {% if attendance_records|get_item:student.id and not attendance_records|get_item:student.id.attended %}checked{% endif %}>
+                                            <label class="form-check-label text-danger" for="absent_{{ student.id }}">
+                                                <i class="fas fa-times"></i> Absent
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="datetime-local" 
+                                               class="form-control form-control-sm" 
+                                               name="check_in_{{ student.id }}" 
+                                               value="{% if attendance_records|get_item:student.id and attendance_records|get_item:student.id.check_in_time %}{{ attendance_records|get_item:student.id.check_in_time|date:'Y-m-d\TH:i' }}{% else %}{{ today }}T{{ event.start_time|time:'H:i' }}{% endif %}">
+                                    </td>
+                                    <td>
+                                        <input type="datetime-local" 
+                                               class="form-control form-control-sm" 
+                                               name="check_out_{{ student.id }}" 
+                                               value="{% if attendance_records|get_item:student.id and attendance_records|get_item:student.id.check_out_time %}{{ attendance_records|get_item:student.id.check_out_time|date:'Y-m-d\TH:i' }}{% else %}{{ today }}T{{ event.end_time|time:'H:i' }}{% endif %}">
+                                    </td>
+                                    <td>
+                                        <input type="text" 
+                                               class="form-control form-control-sm" 
+                                               name="remarks_{{ student.id }}" 
+                                               value="{% if attendance_records|get_item:student.id %}{{ attendance_records|get_item:student.id.remarks }}{% endif %}" 
+                                               placeholder="e.g., Late, Early leave">
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No students enrolled in this class</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if students %}
+                    <div class="mt-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-grid gap-2 d-md-flex">
+                                    <button type="button" class="btn btn-success" onclick="markAll('present')">
+                                        <i class="fas fa-check-double"></i> Mark All Present
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="markAll('absent')">
+                                        <i class="fas fa-times-circle"></i> Mark All Absent
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Attendance
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-chart-bar"></i> Attendance Summary</h4>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="mb-0">{{ students.count }}</h3>
+                            <small class="text-muted">Total Students</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded bg-success text-white">
+                            <h3 class="mb-0" id="presentCount">{{ students.count }}</h3>
+                            <small>Present</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded bg-danger text-white">
+                            <h3 class="mb-0" id="absentCount">0</h3>
+                            <small>Absent</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded bg-info text-white">
+                            <h3 class="mb-0" id="attendancePercent">100%</h3>
+                            <small>Attendance Rate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control-sm {
+    padding: 5px 8px;
+    font-size: 0.875rem;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+</style>
+
+<script>
+function markAll(status) {
+    const students = document.querySelectorAll('[id^="present_"], [id^="absent_"]');
+    
+    students.forEach(radio => {
+        if (status === 'present' && radio.id.startsWith('present_')) {
+            radio.checked = true;
+        } else if (status === 'absent' && radio.id.startsWith('absent_')) {
+            radio.checked = true;
+        }
+    });
+    
+    updateSummary();
+}
+
+function updateSummary() {
+    const presentCount = document.querySelectorAll('input[type="radio"]:checked[value="on"]').length;
+    const totalCount = {{ students.count }};
+    const absentCount = totalCount - presentCount;
+    const attendancePercent = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+    
+    document.getElementById('presentCount').textContent = presentCount;
+    document.getElementById('absentCount').textContent = absentCount;
+    document.getElementById('attendancePercent').textContent = attendancePercent + '%';
+}
+
+// Update summary on radio button change
+document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', updateSummary);
+});
+
+// Initial summary update
+updateSummary();
+
+// Form validation
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    const totalStudents = {{ students.count }};
+    const markedCount = document.querySelectorAll('input[type="radio"]:checked').length;
+    
+    if (markedCount < totalStudents) {
+        e.preventDefault();
+        alert('Please mark attendance for all students!');
+    }
+});
+</script>
+{% endblock %}

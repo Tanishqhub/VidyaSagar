@@ -1,0 +1,263 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1><i class="fas fa-chalkboard-teacher"></i> Trainer Dashboard</h1>
+    <p class="text-muted">Welcome, {{ user.username }}! Manage your courses and students.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h2>{{ students.count }}</h2>
+                <p>Total Students</p>
+                <i class="fas fa-user-graduate fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #f093fb, #f5576c);">
+            <div class="card-body">
+                <h2>4</h2>
+                <p>Active Courses</p>
+                <i class="fas fa-book fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+            <div class="card-body">
+                <h2>15</h2>
+                <p>Pending Assignments</p>
+                <i class="fas fa-tasks fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #43e97b, #38f9d7);">
+            <div class="card-body">
+                <h2>92%</h2>
+                <p>Student Attendance</p>
+                <i class="fas fa-calendar-check fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-book"></i> My Courses</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title">Python Programming</h5>
+                                <p class="card-text">CS101 - Basic to Advanced Python</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary">45 Students</span>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Manage</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h5 class="card-title">Web Development</h5>
+                                <p class="card-text">CS201 - Full Stack Development</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-success">38 Students</span>
+                                    <a href="#" class="btn btn-sm btn-outline-success">Manage</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h5 class="card-title">Data Science</h5>
+                                <p class="card-text">CS301 - Machine Learning & Analytics</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-warning">32 Students</span>
+                                    <a href="#" class="btn btn-sm btn-outline-warning">Manage</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-info">
+                            <div class="card-body">
+                                <h5 class="card-title">Database Systems</h5>
+                                <p class="card-text">CS102 - SQL & NoSQL Databases</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-info">28 Students</span>
+                                    <a href="#" class="btn btn-sm btn-outline-info">Manage</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-calendar"></i> Today's Schedule</h4>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Python Class</strong></span>
+                            <span class="text-primary">9:00 AM</span>
+                        </div>
+                        <small class="text-muted">Room 101 - 45 Students</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Web Dev Lab</strong></span>
+                            <span class="text-primary">11:00 AM</span>
+                        </div>
+                        <small class="text-muted">Lab 203 - 38 Students</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Data Science</strong></span>
+                            <span class="text-primary">2:00 PM</span>
+                        </div>
+                        <small class="text-muted">Room 105 - 32 Students</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Office Hours</strong></span>
+                            <span class="text-primary">4:00 PM</span>
+                        </div>
+                        <small class="text-muted">Teacher's Room - By Appointment</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-tasks"></i> Assignment Submissions</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Assignment</th>
+                                <th>Course</th>
+                                <th>Due Date</th>
+                                <th>Submitted</th>
+                                <th>Pending</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Python Project 1</td>
+                                <td>Python Programming</td>
+                                <td>Dec 15, 2024</td>
+                                <td>38/45</td>
+                                <td>7</td>
+                                <td><span class="badge bg-warning">In Progress</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary">Grade</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Web Dev Assignment 3</td>
+                                <td>Web Development</td>
+                                <td>Dec 12, 2024</td>
+                                <td>32/38</td>
+                                <td>6</td>
+                                <td><span class="badge bg-info">Grading</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary">Review</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>DS Quiz 2</td>
+                                <td>Data Science</td>
+                                <td>Dec 10, 2024</td>
+                                <td>30/32</td>
+                                <td>2</td>
+                                <td><span class="badge bg-success">Completed</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary">View</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-chart-pie"></i> Student Performance</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" style="width: 65%">65% Excellent</div>
+                        <div class="progress-bar bg-info" style="width: 20%">20% Good</div>
+                        <div class="progress-bar bg-warning" style="width: 10%">10% Average</div>
+                        <div class="progress-bar bg-danger" style="width: 5%">5% Need Help</div>
+                    </div>
+                    <p class="text-muted">Based on recent assignments and exams</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-bullhorn"></i> Quick Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="fas fa-plus"></i> New Assignment
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-success w-100">
+                            <i class="fas fa-calendar-plus"></i> Schedule Class
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-info w-100">
+                            <i class="fas fa-upload"></i> Upload Material
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-warning w-100">
+                            <i class="fas fa-chart-bar"></i> View Reports
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1><i class="fas fa-user-tie"></i> Manager Dashboard</h1>
+    <p class="text-muted">Welcome, {{ user.username }}! Manage your trainers and students.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h2>{{ trainers.count }}</h2>
+                <p>Total Trainers</p>
+                <i class="fas fa-chalkboard-teacher fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #f093fb, #f5576c);">
+            <div class="card-body">
+                <h2>{{ students.count }}</h2>
+                <p>Total Students</p>
+                <i class="fas fa-user-graduate fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+            <div class="card-body">
+                <h2>12</h2>
+                <p>Active Courses</p>
+                <i class="fas fa-book fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #43e97b, #38f9d7);">
+            <div class="card-body">
+                <h2>85%</h2>
+                <p>Attendance Rate</p>
+                <i class="fas fa-calendar-check fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-chalkboard-teacher"></i> Trainers List</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Trainer ID</th>
+                                <th>Name</th>
+                                <th>Specialization</th>
+                                <th>Experience</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for trainer in trainers %}
+                            <tr>
+                                <td>
+                                    {% if trainer.trainerprofile %}
+                                        {{ trainer.trainerprofile.trainer_id }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>{{ trainer.username }}</td>
+                                <td>
+                                    {% if trainer.trainerprofile %}
+                                        {{ trainer.trainerprofile.specialization }}
+                                    {% else %}
+                                        Not Specified
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if trainer.trainerprofile %}
+                                        {{ trainer.trainerprofile.experience }} yrs
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if trainer.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No trainers found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-primary btn-sm mt-2">
+                    <i class="fas fa-plus"></i> Add New Trainer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-user-graduate"></i> Recent Students</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Course</th>
+                                <th>Semester</th>
+                                <th>Enrollment Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students|slice:":5" %}
+                            <tr>
+                                <td>
+                                    {% if student.studentprofile %}
+                                        {{ student.studentprofile.student_id }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.username }}</td>
+                                <td>
+                                    {% if student.studentprofile %}
+                                        {{ student.studentprofile.course }}
+                                    {% else %}
+                                        Not Assigned
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.studentprofile %}
+                                        {{ student.studentprofile.semester }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.studentprofile %}
+                                        {{ student.studentprofile.enrollment_date|date:"M d, Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No students found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span class="text-muted">Showing {{ students.count }} total students</span>
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-chart-line"></i> Enrollment Statistics</h4>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded">
+                            <h5>Computer Science</h5>
+                            <h3 class="text-primary">120</h3>
+                            <p class="text-muted">Students</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded">
+                            <h5>Business</h5>
+                            <h3 class="text-success">85</h3>
+                            <p class="text-muted">Students</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded">
+                            <h5>Engineering</h5>
+                            <h3 class="text-warning">95</h3>
+                            <p class="text-muted">Students</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 border rounded">
+                            <h5>Arts</h5>
+                            <h3 class="text-info">65</h3>
+                            <p class="text-muted">Students</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4><i class="fas fa-tasks"></i> Pending Approvals</h4>
+                <span class="badge bg-warning">3 New</span>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>New Trainer Registration</h6>
+                            <small class="text-muted">John Doe wants to join as a Python trainer</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-success me-1">Approve</button>
+                            <button class="btn btn-sm btn-danger">Reject</button>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>Course Creation Request</h6>
+                            <small class="text-muted">Data Science course proposal</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-success me-1">Approve</button>
+                            <button class="btn btn-sm btn-danger">Reject</button>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>Leave Application</h6>
+                            <small class="text-muted">Trainer Smith - 2 days leave</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-success me-1">Approve</button>
+                            <button class="btn btn-sm btn-danger">Reject</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

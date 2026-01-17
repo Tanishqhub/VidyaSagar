@@ -1,0 +1,317 @@
+{% extends 'dashboard/base.html' %}
+{% load calendar_tags %}
+
+{% block content %}
+<div class="header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="fas fa-chart-line"></i> Attendance Reports</h1>
+        <p class="text-muted">View and analyze attendance data</p>
+    </div>
+    <div>
+        <a href="{% url 'calendar' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Calendar
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-filter"></i> Filter Reports</h4>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Event Type</label>
+                        <select name="event_type" class="form-select">
+                            <option value="class" {% if event_type == 'class' %}selected{% endif %}>Classes Only</option>
+                            <option value="all" {% if event_type == 'all' %}selected{% endif %}>All Events</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-list"></i> Attendance Records</h4>
+                <button class="btn btn-sm btn-success" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </div>
+            <div class="card-body">
+                {% if attendance_data %}
+                <div class="table-responsive" id="reportTable">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Location</th>
+                                <th>Total Students</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Attendance %</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in attendance_data %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong>{{ data.event.title }}</strong><br>
+                                    <small class="text-muted">{{ data.event.get_event_type_display }}</small>
+                                </td>
+                                <td>{{ data.event.start_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if data.event.all_day %}
+                                    All Day
+                                    {% else %}
+                                    {{ data.event.start_time|time:"g:i A" }} - {{ data.event.end_time|time:"g:i A" }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ data.event.location|default:"-" }}</td>
+                                <td>{{ data.total_students }}</td>
+                                <td>
+                                    <span class="badge bg-success">{{ data.attended }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">{{ data.total_students|subtract:data.attended }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if data.percentage >= 80 %}bg-success{% elif data.percentage >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             style="width: {{ data.percentage }}%">
+                                            {{ data.percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if data.event.start_date < today %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% elif data.event.start_date == today %}
+                                        <span class="badge bg-primary">Today</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Upcoming</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'event_detail' data.event.id %}" class="btn btn-outline-primary" title="View Event">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'take_attendance' data.event.id %}" class="btn btn-outline-success" title="Take Attendance">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </a>
+                                        <button class="btn btn-outline-info" 
+                                                onclick="viewAttendanceDetails({{ data.event.id }})"
+                                                title="View Details">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th colspan="5" class="text-end">Totals:</th>
+                                <th>{{ total_students }}</th>
+                                <th>{{ total_present }}</th>
+                                <th>{{ total_absent }}</th>
+                                <th>{{ overall_percentage }}%</th>
+                                <th colspan="2"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <!-- Statistics Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card text-white bg-primary">
+                            <div class="card-body text-center">
+                                <h3 class="mb-0">{{ total_events }}</h3>
+                                <small>Total Events</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-success">
+                            <div class="card-body text-center">
+                                <h3 class="mb-0">{{ average_attendance }}%</h3>
+                                <small>Average Attendance</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-warning">
+                            <div class="card-body text-center">
+                                <h3 class="mb-0">{{ best_attendance_event.title|truncatechars:20|default:"-" }}</h3>
+                                <small>Best Attendance</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info">
+                            <div class="card-body text-center">
+                                <h3 class="mb-0">{{ attendance_trend }}%</h3>
+                                <small>Trend (Last 7 days)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h4>No Attendance Data Found</h4>
+                    <p class="text-muted">No attendance records match your filters. Try adjusting your search criteria.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Details Modal -->
+<div class="modal fade" id="attendanceDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Attendance Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="attendanceDetailsContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    font-size: 0.75rem;
+    line-height: 20px;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.card.bg-primary, .card.bg-success, .card.bg-warning, .card.bg-info {
+    border: none;
+}
+</style>
+
+<script>
+function viewAttendanceDetails(eventId) {
+    // Load attendance details via AJAX
+    fetch(`/calendar/attendance/details/${eventId}/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('attendanceDetailsContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('attendanceDetailsModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading attendance details:', error);
+            document.getElementById('attendanceDetailsContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading attendance details.</div>';
+            new bootstrap.Modal(document.getElementById('attendanceDetailsModal')).show();
+        });
+}
+
+function exportToExcel() {
+    // Create a temporary table for export
+    const table = document.getElementById('reportTable').cloneNode(true);
+    
+    // Remove action buttons
+    table.querySelectorAll('td:last-child, th:last-child').forEach(cell => cell.remove());
+    
+    // Create CSV content
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const rowData = [];
+        const cells = row.querySelectorAll('th, td');
+        
+        cells.forEach(cell => {
+            // Clean up the cell content
+            let text = cell.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+            text = text.replace(/"/g, '""'); // Escape double quotes
+            rowData.push(`"${text}"`);
+        });
+        
+        csv.push(rowData.join(','));
+    });
+    
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `attendance_report_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Initialize date pickers with default values
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    
+    if (!startDateInput.value) {
+        // Default to first day of current month
+        const firstDay = new Date();
+        firstDay.setDate(1);
+        startDateInput.value = firstDay.toISOString().split('T')[0];
+    }
+    
+    if (!endDateInput.value) {
+        endDateInput.value = today;
+    }
+    
+    // Set max date to today for end date
+    endDateInput.max = today;
+    startDateInput.max = today;
+});
+</script>
+{% endblock %}

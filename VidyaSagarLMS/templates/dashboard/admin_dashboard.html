@@ -1,0 +1,179 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+    <p class="text-muted">Welcome, {{ user.username }}! Manage system users and settings.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h2>{{ total_users }}</h2>
+                <p>Total Users</p>
+                <i class="fas fa-users fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #f093fb, #f5576c);">
+            <div class="card-body">
+                <h2>{{ student_count }}</h2>
+                <p>Students</p>
+                <i class="fas fa-user-graduate fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+            <div class="card-body">
+                <h2>{{ trainer_count }}</h2>
+                <p>Trainers</p>
+                <i class="fas fa-chalkboard-teacher fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #43e97b, #38f9d7);">
+            <div class="card-body">
+                <h2>{{ manager_count }}</h2>
+                <p>Managers</p>
+                <i class="fas fa-user-tie fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #ff9a9e, #fad0c4);">
+            <div class="card-body">
+                <h2>{{ admin_count }}</h2>
+                <p>Admins</p>
+                <i class="fas fa-user-shield fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-list"></i> User Management</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Phone</th>
+                            <th>Date Joined</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.email }}</td>
+                            <td>
+                                {% if u.role == 'superadmin' %}
+                                <span class="badge bg-dark">Super Admin</span>
+                                {% elif u.role == 'admin' %}
+                                <span class="badge bg-danger">Admin</span>
+                                {% elif u.role == 'manager' %}
+                                <span class="badge bg-primary">Manager</span>
+                                {% elif u.role == 'trainer' %}
+                                <span class="badge bg-warning">Trainer</span>
+                                {% elif u.role == 'student' %}
+                                <span class="badge bg-success">Student</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.phone|default:"-" }}</td>
+                            <td>{{ u.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                {% if u.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger">Deactivate</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No users found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-chart-bar"></i> User Distribution</h4>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar bg-success">
+                        Students: {{ student_count }}
+                    </div>
+                </div>
+                <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar bg-warning" >
+                        Trainers: {{ trainer_count }}
+                    </div>
+                </div>
+                <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar bg-primary">
+                        Managers: {{ manager_count }}
+                    </div>
+                </div>
+               
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-tools"></i> Quick Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button class="btn btn-outline-primary w-100 mb-2">
+                            <p><i class="fas fa-user-plus"></i><a href="/admin/" >Add User</a></p>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-file-export"></i> Export Data
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-info w-100 mb-2">
+                            <i class="fas fa-cog"></i> System Settings
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-warning w-100 mb-2">
+                            <i class="fas fa-bell"></i> Notifications
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

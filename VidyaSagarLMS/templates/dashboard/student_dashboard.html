@@ -1,0 +1,352 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1><i class="fas fa-user-graduate"></i> Student Dashboard</h1>
+    <p class="text-muted">Welcome, {{ user.username }}! Continue your learning journey.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h2>4</h2>
+                <p>Enrolled Courses</p>
+                <i class="fas fa-book fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #f093fb, #f5576c);">
+            <div class="card-body">
+                <h2>3</h2>
+                <p>Pending Assignments</p>
+                <i class="fas fa-tasks fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+            <div class="card-body">
+                <h2>92%</h2>
+                <p>Attendance</p>
+                <i class="fas fa-calendar-check fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card" style="background: linear-gradient(45deg, #43e97b, #38f9d7);">
+            <div class="card-body">
+                <h2>85%</h2>
+                <p>Overall Grade</p>
+                <i class="fas fa-chart-line fa-2x float-end"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-book-open"></i> My Courses</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title">Python Programming</h5>
+                                <p class="card-text">Prof. John Smith</p>
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-primary" style="width: 75%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">75% Complete</small>
+                                    <a href="#" class="btn btn-sm btn-primary">Continue</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h5 class="card-title">Web Development</h5>
+                                <p class="card-text">Prof. Sarah Johnson</p>
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-success" style="width: 60%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">60% Complete</small>
+                                    <a href="#" class="btn btn-sm btn-success">Continue</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h5 class="card-title">Data Science</h5>
+                                <p class="card-text">Prof. Michael Brown</p>
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-warning" style="width: 40%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">40% Complete</small>
+                                    <a href="#" class="btn btn-sm btn-warning">Continue</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-info">
+                            <div class="card-body">
+                                <h5 class="card-title">Database Systems</h5>
+                                <p class="card-text">Prof. Emily Davis</p>
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-info" style="width: 85%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">85% Complete</small>
+                                    <a href="#" class="btn btn-sm btn-info">Continue</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-calendar-day"></i> Today's Classes</h4>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Python Programming</strong></span>
+                            <span class="text-primary">9:00 AM</span>
+                        </div>
+                        <small class="text-muted">Room 101 - Prof. John Smith</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Web Dev Lab</strong></span>
+                            <span class="text-primary">11:00 AM</span>
+                        </div>
+                        <small class="text-muted">Lab 203 - Prof. Sarah Johnson</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Data Science</strong></span>
+                            <span class="text-primary">2:00 PM</span>
+                        </div>
+                        <small class="text-muted">Room 105 - Prof. Michael Brown</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Library Session</strong></span>
+                            <span class="text-primary">4:00 PM</span>
+                        </div>
+                        <small class="text-muted">Main Library - Optional</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4><i class="fas fa-tasks"></i> Pending Assignments</h4>
+                <span class="badge bg-danger">3 Due Soon</span>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item list-group-item-danger">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6>Python Project 1</h6>
+                                <small class="text-muted">Due: Dec 15, 2024</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger me-2">2 days left</span>
+                                <button class="btn btn-sm btn-success">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6>Web Dev Assignment 3</h6>
+                                <small class="text-muted">Due: Dec 18, 2024</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-warning me-2">5 days left</span>
+                                <button class="btn btn-sm btn-outline-primary">Start</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6>DS Quiz 2</h6>
+                                <small class="text-muted">Due: Dec 20, 2024</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-info me-2">7 days left</span>
+                                <button class="btn btn-sm btn-outline-primary">Start</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-trophy"></i> Recent Grades</h4>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>Python Midterm</span>
+                            <span class="badge bg-success">A (92%)</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>Web Dev Project</span>
+                            <span class="badge bg-info">B+ (88%)</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>Database Quiz</span>
+                            <span class="badge bg-success">A- (90%)</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>DS Assignment 1</span>
+                            <span class="badge bg-warning">B (85%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-chart-line"></i> Academic Progress</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="display-4 text-primary">85%</div>
+                            <p class="text-muted">Overall GPA</p>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h4">92%</div>
+                                    <small class="text-muted">Python</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h4">88%</div>
+                                    <small class="text-muted">Web Dev</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h4">85%</div>
+                                    <small class="text-muted">Data Science</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h4">90%</div>
+                                    <small class="text-muted">Database</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 15px;">
+                            <div class="progress-bar bg-primary" style="width: 92%"></div>
+                            <div class="progress-bar bg-success" style="width: 88%"></div>
+                            <div class="progress-bar bg-warning" style="width: 85%"></div>
+                            <div class="progress-bar bg-info" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-lightbulb"></i> Recommended Resources</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-video fa-2x text-primary mb-3"></i>
+                                <h6>Python Tutorials</h6>
+                                <small class="text-muted">Advanced Python concepts</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-code fa-2x text-success mb-3"></i>
+                                <h6>Web Dev Exercises</h6>
+                                <small class="text-muted">Practice projects</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-book fa-2x text-warning mb-3"></i>
+                                <h6>Data Science E-books</h6>
+                                <small class="text-muted">Free resources</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-question-circle fa-2x text-info mb-3"></i>
+                                <h6>Upcoming Office Hours</h6>
+                                <small class="text-muted">Get help from professors</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

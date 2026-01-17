@@ -1,0 +1,151 @@
+{% extends 'dashboard/base.html' %}
+{% load calendar_tags %}
+
+{% block content %}
+<div class="header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="fas fa-calendar-day"></i> Daily Schedule</h1>
+        <p class="text-muted">{{ view_date|date:"l, F d, Y" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'day_view' prev_day.year prev_day.month prev_day.day %}" 
+           class="btn btn-outline-primary">
+            <i class="fas fa-chevron-left"></i> Previous Day
+        </a>
+        <a href="{% url 'today_view' %}" class="btn btn-primary mx-2">
+            <i class="fas fa-calendar-day"></i> Today
+        </a>
+        <a href="{% url 'day_view' next_day.year next_day.month next_day.day %}" 
+           class="btn btn-outline-primary">
+            Next Day <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-clock"></i> Schedule for {{ view_date|date:"F d, Y" }}</h4>
+                {% if user.role == 'trainer' or user.role == 'manager' or user.role == 'admin' or user.role == 'superadmin' %}
+                <a href="{% url 'add_event' %}?date={{ view_date|date:'Y-m-d' }}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus"></i> Add Event for This Day
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if events %}
+                <!-- Simple list view instead of complex timeline -->
+                <div class="list-group">
+                    {% for event in events %}
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    <span class="badge" style="background-color: {{ event.category.color|default:'#007bff' }}">
+                                        {{ event.get_event_type_display }}
+                                    </span>
+                                    {{ event.title }}
+                                </h6>
+                                <p class="mb-1">
+                                    <i class="fas fa-clock"></i> 
+                                    {% if event.all_day %}
+                                        All Day
+                                    {% else %}
+                                        {{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}
+                                    {% endif %}
+                                </p>
+                                {% if event.location %}
+                                <p class="mb-1">
+                                    <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                                    {% if event.room %}({{ event.room }}){% endif %}
+                                </p>
+                                {% endif %}
+                                {% if event.description %}
+                                <p class="mb-1 text-muted">
+                                    {{ event.description|truncatechars:100 }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            <div class="btn-group">
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                                {% if user.role == 'manager' or user.role == 'admin' or user.role == 'superadmin' or user == event.created_by %}
+                                <a href="{% url 'edit_event' event.id %}" class="btn btn-sm btn-outline-warning">
+                                    Edit
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- All Day Events -->
+                <div class="all-day-events mt-4">
+                    <h5><i class="fas fa-sun"></i> All Day Events</h5>
+                    {% for event in events %}
+                    {% if event.all_day %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ event.title }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-tag"></i> {{ event.get_event_type_display }}
+                                        {% if event.location %}
+                                        | <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'event_detail' event.id %}" class="btn btn-sm btn-primary">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h4>No Events Scheduled</h4>
+                    <p class="text-muted">There are no events scheduled for {{ view_date|date:"F d, Y" }}</p>
+                    {% if user.role == 'trainer' or user.role == 'manager' or user.role == 'admin' or user.role == 'superadmin' %}
+                    <a href="{% url 'add_event' %}?date={{ view_date|date:'Y-m-d' }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add First Event
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</div>
+<div>
+        <a href="{% url 'calendar' %}" 
+           class="btn btn-outline-primary" style='margin-top: 100px; width: 100px   ;'>
+            <i class="fas fa-chevron-left"></i> back
+        </a>
+    </div>
+<style>
+.all-day-events .card {
+    border-left: 3px solid #ffc107;
+}
+
+.list-group-item {
+    border-left: 3px solid #007bff;
+    margin-bottom: 5px;
+}
+
+.badge {
+    font-size: 0.75em;
+    padding: 4px 8px;
+}
+</style>
+{% endblock %}

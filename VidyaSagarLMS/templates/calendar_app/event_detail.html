@@ -1,0 +1,210 @@
+{% extends 'dashboard/base.html' %}
+{% load calendar_tags %}
+
+{% block content %}
+<div class="header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="fas fa-calendar-check"></i> Event Details</h1>
+        <p class="text-muted">{{ event.get_event_type_display }}</p>
+    </div>
+    <div>
+        <a href="{% url 'calendar' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Calendar
+        </a>
+        {% if can_edit %}
+        <a href="{% url 'edit_event' event.id %}" class="btn btn-warning mx-2">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        {% endif %}
+        {% if user.role in 'manager,admin,superadmin'|split:',' %}
+        <a href="{% url 'take_attendance' event.id %}" class="btn btn-success">
+            <i class="fas fa-clipboard-check"></i> Take Attendance
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">{{ event.title }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-info-circle text-primary"></i> Event Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Type:</th>
+                                <td>
+                                    <span class="badge" style="background-color: {{ event.category.color|default:'#007bff' }}">
+                                        {{ event.get_event_type_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Category:</th>
+                                <td>{{ event.category.name|default:"None" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Created By:</th>
+                                <td>{{ event.created_by.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Created On:</th>
+                                <td>{{ event.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-calendar-alt text-success"></i> Date & Time</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Date:</th>
+                                <td>{{ event.start_date|date:"l, F d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Time:</th>
+                                <td>
+                                    {% if event.all_day %}
+                                    All Day
+                                    {% else %}
+                                    {{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if event.end_date and event.end_date != event.start_date %}
+                            <tr>
+                                <th>End Date:</th>
+                                <td>{{ event.end_date|date:"l, F d, Y" }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if event.is_recurring %}
+                            <tr>
+                                <th>Recurrence:</th>
+                                <td>{{ event.recurrence_pattern|title }} until {{ event.recurrence_end_date|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-map-marker-alt text-danger"></i> Location</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Location:</th>
+                                <td>{{ event.location|default:"Not specified" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Room:</th>
+                                <td>{{ event.room|default:"Not specified" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-users text-info"></i> Participants</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Trainers:</th>
+                                <td>
+                                    {% for trainer in event.trainers.all %}
+                                    <span class="badge bg-warning">{{ trainer.username }}</span>
+                                    {% empty %}
+                                    None assigned
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Students:</th>
+                                <td>{{ event.students.count }} students</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6><i class="fas fa-file-alt text-secondary"></i> Description</h6>
+                    <div class="p-3 bg-light rounded">
+                        {{ event.description|linebreaks|default:"No description provided." }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-tools"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'calendar' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar"></i> View Calendar
+                    </a>
+                    <a href="{% url 'day_view' event.start_date.year event.start_date.month event.start_date.day %}" 
+                       class="btn btn-outline-info">
+                        <i class="fas fa-calendar-day"></i> View Day
+                    </a>
+                    {% if can_edit %}
+                    <a href="{% url 'edit_event' event.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Edit Event
+                    </a>
+                    {% endif %}
+                    {% if user.role in 'manager,admin,superadmin'|split:',' and event.event_type == 'class' %}
+                    <a href="{% url 'take_attendance' event.id %}" class="btn btn-success">
+                        <i class="fas fa-clipboard-check"></i> Take Attendance
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if attendance and event.event_type == 'class' %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Attendance</h6>
+            </div>
+            <div class="card-body">
+                <div class="attendance-summary">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="text-center">
+                            <h4 class="mb-0">{{ attendance|length }}</h4>
+                            <small>Total</small>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="mb-0 text-success">{{ attendance|filter_attended:True|length }}</h4>
+                            <small>Present</small>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="mb-0 text-danger">{{ attendance|filter_attended:False|length }}</h4>
+                            <small>Absent</small>
+                        </div>
+                    </div>
+                    <div class="list-group">
+                        {% for record in attendance|slice:":5" %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ record.student.username }}</span>
+                                <span class="badge {% if record.attended %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if record.attended %}Present{% else %}Absent{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if attendance|length > 5 %}
+                    <div class="text-center mt-2">
+                        <small class="text-muted">+{{ attendance|length|add:"-5" }} more records</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

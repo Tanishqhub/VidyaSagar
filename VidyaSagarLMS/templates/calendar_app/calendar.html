@@ -1,0 +1,514 @@
+{% extends 'dashboard/base.html' %}
+{% load calendar_tags %}
+
+{% block content %}
+<div class="header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="fas fa-calendar-alt"></i> Calendar</h1>
+        <p class="text-muted">Manage your schedule and events</p>
+    </div>
+    <div>
+        {% if user.role == 'trainer' or user.role == 'manager' or user.role == 'admin' or user.role == 'superadmin' %}
+        <a href="{% url 'add_event' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Event
+        </a>
+        {% endif %}
+        <a href="{% url 'today_view' %}" class="btn btn-info">
+            <i class="fas fa-calendar-day"></i> Today
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-calendar"></i> 
+                    {{ current_month_name }}, {{ current_year }}
+                </h3>
+                <div>
+                    <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                    <a href="{% url 'calendar' %}" class="btn btn-sm btn-outline-secondary mx-2">
+                        Current Month
+                    </a>
+                    <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" 
+                       class="btn btn-sm btn-outline-primary">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <!-- Month View Calendar Grid -->
+                <div class="calendar-grid">
+                    <!-- Weekday Headers -->
+                    <div class="calendar-header">
+                        {% for weekday in weekdays %}
+                        <div class="weekday-header">{{ weekday }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Calendar Weeks -->
+                    {% for week in month_calendar %}
+                    <div class="calendar-week">
+                        {% for day in week %}
+                        <div class="calendar-day 
+                            {% if not day.is_current_month %}other-month{% endif %}
+                            {% if day.is_today %}today{% endif %}
+                            {% if day.date and day.date.weekday == 5 or day.date.weekday == 6 %}weekend{% endif %}">
+                            
+                            <div class="day-header">
+                                {% if day.date %}
+                                <span class="day-number {% if day.is_today %}today-number{% endif %}">
+                                    {{ day.day }}
+                                </span>
+                                {% if day.is_today %}
+                                <span class="today-badge">Today</span>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="day-events">
+                                {% for event in day.events|slice:":3" %}
+                                <div class="event-item" 
+                                     style="border-left: 3px solid {{ event.category.color|default:'#007bff' }};"
+                                     onclick="window.location.href='{% url 'event_detail' event.id %}'"
+                                     title="{{ event.title }} - {{ event.get_event_type_display }}">
+                                    <div class="event-time">
+                                        {% if event.all_day %}
+                                        <i class="fas fa-sun"></i> All day
+                                        {% else %}
+                                        <i class="fas fa-clock"></i> {{ event.start_time|time:"g:i A" }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="event-title">{{ event.title|truncatechars:20 }}</div>
+                                    <div class="event-type">
+                                        <small>{{ event.get_event_type_display }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                {% if day.events|length > 3 %}
+                                <div class="more-events" 
+                                     onclick="window.location.href='{% url 'day_view' day.date.year day.date.month day.date.day %}'">
+                                    +{{ day.events|length|add:"-3" }} more
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-list"></i> Upcoming Events (Next 7 Days)</h4>
+            </div>
+            <div class="card-body">
+                {% with upcoming_events=events|filter_upcoming:7 %}
+                {% if upcoming_events %}
+                <div class="timeline-events">
+                    {% for event in upcoming_events|slice:":10" %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker" 
+                             style="background-color: {{ event.category.color|default:'#007bff' }}"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'event_detail' event.id %}">{{ event.title }}</a>
+                                </h6>
+                                <small class="text-muted">{{ event.start_date|date:"M d" }}</small>
+                            </div>
+                            <p class="mb-1">
+                                <i class="fas fa-clock"></i> 
+                                {% if event.all_day %}
+                                    All Day
+                                {% else %}
+                                    {{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}
+                                {% endif %}
+                                {% if event.location %}
+                                | <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                                {% endif %}
+                            </p>
+                            <span class="badge" style="background-color: {{ event.category.color|default:'#007bff' }}20; color: #333;">
+                                {{ event.get_event_type_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-calendar-check fa-2x text-muted"></i>
+                    <p class="text-muted mt-2">No upcoming events in the next 7 days</p>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Event Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4><i class="fas fa-chart-pie"></i> Event Statistics</h4>
+            </div>
+            <div class="card-body">
+                <div class="event-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ event_counts.total }}</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ event_counts.classes }}</div>
+                        <div class="stat-label">Classes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ event_counts.meetings }}</div>
+                        <div class="stat-label">Meetings</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ event_counts.exams }}</div>
+                        <div class="stat-label">Exams</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ event_counts.holidays }}</div>
+                        <div class="stat-label">Holidays</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-tools"></i> Quick Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.role == 'trainer' or user.role == 'manager' or user.role == 'admin' or user.role == 'superadmin' %}
+                    <a href="{% url 'add_event' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Event
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'today_view' %}" class="btn btn-info">
+                        <i class="fas fa-calendar-day"></i> Today's Schedule
+                    </a>
+                    
+                    {% if user.role == 'manager' or user.role == 'admin' or user.role == 'superadmin' %}
+                    <a href="{% url 'manage_categories' %}" class="btn btn-secondary">
+                        <i class="fas fa-tags"></i> Manage Categories
+                    </a>
+                    
+                    <a href="{% url 'course_schedules' %}" class="btn btn-secondary">
+                        <i class="fas fa-chalkboard-teacher"></i> Course Schedules
+                    </a>
+                    
+                    <a href="{% url 'attendance_report' %}" class="btn btn-warning">
+                        <i class="fas fa-clipboard-check"></i> Attendance Report
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4><i class="fas fa-info-circle"></i> Event Colors</h4>
+            </div>
+            <div class="card-body">
+                <div class="legend">
+                    <div class="legend-item mb-2">
+                        <span class="legend-color" style="background-color: #007bff;"></span>
+                        <small>Classes/Lectures</small>
+                    </div>
+                    <div class="legend-item mb-2">
+                        <span class="legend-color" style="background-color: #28a745;"></span>
+                        <small>Meetings</small>
+                    </div>
+                    <div class="legend-item mb-2">
+                        <span class="legend-color" style="background-color: #ffc107;"></span>
+                        <small>Exams</small>
+                    </div>
+                    <div class="legend-item mb-2">
+                        <span class="legend-color" style="background-color: #dc3545;"></span>
+                        <small>Holidays</small>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background-color: #6f42c1;"></span>
+                        <small>Other Events</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Calendar Grid Styles */
+.calendar-grid {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.calendar-header {
+    display: flex;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.weekday-header {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.calendar-week {
+    display: flex;
+    min-height: 120px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.calendar-week:last-child {
+    border-bottom: none;
+}
+
+.calendar-day {
+    flex: 1;
+    padding: 8px;
+    border-right: 1px solid #e0e0e0;
+    position: relative;
+    min-height: 140px;
+    background-color: white;
+}
+
+.calendar-day:last-child {
+    border-right: none;
+}
+
+.calendar-day.weekend {
+    background-color: #f9f9f9;
+}
+
+.calendar-day.other-month {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+}
+
+.calendar-day.today {
+    background-color: #e3f2fd;
+    border: 2px solid #2196f3;
+}
+
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.day-number {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #212529;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.day-number.today-number {
+    background-color: #2196f3;
+    color: white;
+}
+
+.today-badge {
+    font-size: 0.7rem;
+    background-color: #ff5722;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.day-events {
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.event-item {
+    background-color: white;
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.event-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.event-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+
+.event-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #212529;
+    margin-bottom: 2px;
+}
+
+.event-type {
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.more-events {
+    font-size: 0.8rem;
+    color: #2196f3;
+    text-align: center;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 3px;
+    background-color: #f8f9fa;
+    margin-top: 4px;
+}
+
+.more-events:hover {
+    background-color: #e9ecef;
+}
+
+/* Timeline Events */
+.timeline-events {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 3px #007bff;
+}
+
+.timeline-content {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Event Statistics */
+.event-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #007bff;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* Legend */
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    margin-right: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 100px;
+        padding: 4px;
+    }
+    
+    .day-number {
+        font-size: 0.9rem;
+        width: 24px;
+        height: 24px;
+    }
+    
+    .event-item {
+        padding: 4px;
+    }
+    
+    .event-title {
+        font-size: 0.75rem;
+    }
+    
+    .event-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .stat-item {
+        padding: 10px;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
