@@ -1,0 +1,84 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .container { margin: 20px; }
+    .course-header { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+    .module-section { margin-top: 30px; }
+    .module-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; background: white; }
+    .session-item { border-left: 3px solid #28a745; padding: 10px; margin: 5px 0 5px 20px; background: #f8f9fa; }
+    .btn { padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-right: 5px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-warning { background: #ffc107; color: black; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .info-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+    .info-item { flex: 1; min-width: 200px; }
+    .no-modules { text-align: center; padding: 40px; background: #f8f9fa; border-radius: 5px; }
+</style>
+
+<div class="container">
+    <div class="course-header">
+        <a href="{% url 'course_list' %}" class="btn btn-secondary">← All Courses</a>
+
+        <h1>{{ course.title }} ({{ course.cid }})</h1>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Duration:</strong> {{ course.duration_days }} days ({{ course.duration_months }} months)
+            </div>
+            <div class="info-item">
+                <strong>Fees:</strong> ₹{{ course.fees }}</div>
+            <div class="info-item"><strong>Created:</strong> {{ course.created_at|date:"M d, Y" }}</div>
+            <div class="info-item"><strong>Modules:</strong> {{ course.modules.count }}</div>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <a href="{% url 'course_update' course.cid %}" class="btn btn-warning">Edit Course</a>
+            <a href="{% url 'course_delete' course.cid %}" class="btn btn-danger">Delete Course</a>
+            <a href="{% url 'module_create' course.cid %}" class="btn btn-success">+ Add Module</a>
+            <a href="{% url 'module_list' course.cid %}" class="btn btn-primary">View All Modules</a>
+            <a href="{% url 'course_session_list' course.cid %}" class="btn btn-primary">View All Course Sessions</a>
+        </div>
+    </div>
+
+    <div class="module-section">
+        <h2>Modules ({{ course.modules.count }})</h2>
+
+        {% if course.modules.all %}
+            {% for module in course.modules.all %}
+            <div class="module-card">
+                <h3>{{ module.m_title }} <small style="font-size: 14px; color: #666;">({{ module.no_of_sessions }} sessions)</small></h3>
+
+                <div>
+                    <a href="{% url 'module_detail' module.mid %}" class="btn btn-primary">View</a>
+                    <a href="{% url 'module_update' module.mid %}" class="btn btn-warning">Edit</a>
+                    <a href="{% url 'module_delete' module.mid %}" class="btn btn-danger">Delete</a>
+                    <a href="{% url 'session_create' module.mid %}" class="btn btn-success">Add Session</a>
+                </div>
+
+                {% if module.sessions.all %}
+                <h4 style="margin-top: 15px;">Sessions:</h4>
+                {% for session in module.sessions.all %}
+                <div class="session-item">
+                    <strong>Session {{ session.session_number }}:</strong> {{ session.topics|truncatechars:100 }}
+                    <div style="margin-top: 5px;">
+                        <a href="{% url 'session_update' session.sid %}" class="btn btn-warning" style="padding: 3px 8px; font-size: 12px;">Edit</a>
+                        <a href="{% url 'session_delete' session.sid %}" class="btn btn-danger" style="padding: 3px 8px; font-size: 12px;">Delete</a>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="no-modules">
+            <h3>No modules yet</h3>
+            <p>Add modules to create the course structure.</p>
+            <a href="{% url 'module_create' course.cid %}" class="btn btn-success">Create First Module</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

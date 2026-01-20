@@ -1,0 +1,110 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .container { margin: 20px; }
+    .session-card { border: 1px solid #e0e0e0; padding: 20px; margin: 15px 0; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; }
+    .session-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .session-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; }
+    .session-number { background: #007bff; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+    .module-badge { background: #6c757d; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; display: inline-block; }
+    .course-badge { background: #28a745; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; display: inline-block; margin-left: 5px; }
+    .topics { color: #555; line-height: 1.6; margin: 10px 0; }
+    .btn { padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; border: none; cursor: pointer; display: inline-block; font-size: 14px; transition: all 0.2s; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #1e7e34; }
+    .btn-warning { background: #ffc107; color: black; }
+    .btn-warning:hover { background: #e0a800; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-outline { background: transparent; border: 1px solid #007bff; color: #007bff; }
+    .btn-outline:hover { background: #007bff; color: white; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+    .stats { display: flex; gap: 20px; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+    .stat-item { text-align: center; }
+    .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+    .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
+    .no-sessions { text-align: center; padding: 50px 20px; background: #f8f9fa; border-radius: 8px; margin: 20px 0; }
+    .breadcrumb { margin-bottom: 20px; font-size: 14px; color: #666; }
+    .breadcrumb a { color: #007bff; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .action-buttons { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+    .filters { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    .filter-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .filter-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: white; }
+</style>
+
+<div class="container">
+    <div class="breadcrumb">
+        <a href="{% url 'course_list' %}">Courses</a>
+        {% if course %} › <a href="{% url 'course_detail' course.cid %}">{{ course.title }}</a> {% endif %}
+        {% if module %} › <a href="{% url 'module_detail' module.mid %}">{{ module.m_title }}</a> {% endif %} › Sessions
+    </div>
+
+    <div class="header">
+        <div>
+            <h1>{% if module %}Sessions for "{{ module.m_title }}"{% elif course %}Sessions for "{{ course.title }}"{% else %}All Sessions{% endif %}</h1>
+            <p style="color: #666; margin-top: 5px;">{% if module %}Module ID: {{ module.mid }} | Course: {{ module.course.title }}{% elif course %}Course ID: {{ course.cid }}{% endif %}</p>
+        </div>
+        <div>
+            {% if module %}
+            <a href="{% url 'session_create' module.mid %}" class="btn btn-success">+ Add Session</a>
+            <a href="{% url 'module_detail' module.mid %}" class="btn btn-secondary">← Back to Module</a>
+            {% elif course %}
+            <a href="{% url 'course_detail' course.cid %}" class="btn btn-secondary">← Back to Course</a>
+            {% else %}
+            <a href="{% url 'course_list' %}" class="btn btn-secondary">← Back to Courses</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item"><div class="stat-number">{{ sessions.count }}</div><div class="stat-label">Total Sessions</div></div>
+        {% if course %}<div class="stat-item"><div class="stat-number">{{ course.modules.count }}</div><div class="stat-label">Modules</div></div>{% endif %}
+        {% if module %}<div class="stat-item"><div class="stat-number">{{ module.no_of_sessions }}</div><div class="stat-label">Total Sessions in Module</div></div>{% endif %}
+    </div>
+
+    {% if sessions %}
+        {% for session in sessions %}
+        <div class="session-card">
+            <div class="session-header">
+                <div>
+                    <h3 style="margin: 0;"><span class="session-number">Session {{ session.session_number }}</span>{% if not module %} <span class="module-badge">{{ session.module.m_title }}</span>{% endif %}{% if not course %} <span class="course-badge">{{ session.course.title }}</span>{% endif %}</h3>
+                </div>
+                <div style="font-size: 12px; color: #888;">ID: S{{ session.sid }}</div>
+            </div>
+
+            <div class="topics"><strong>Topics Covered:</strong><div style="margin-top: 8px;">{{ session.topics|linebreaks }}</div></div>
+
+            <div class="action-buttons">
+                <a href="{% url 'session_detail' session.sid %}" class="btn btn-primary">View Details</a>
+                <a href="{% url 'session_update' session.sid %}" class="btn btn-warning">Edit</a>
+                <a href="{% url 'session_delete' session.sid %}" class="btn btn-danger">Delete</a>
+                <a href="{% url 'module_detail' session.module.mid %}" class="btn btn-outline">View Module</a>
+                <a href="{% url 'course_detail' session.course.cid %}" class="btn btn-outline">View Course</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="no-sessions">
+        <h3>No sessions found</h3>
+        <p>{% if module %}This module doesn't have any sessions yet.{% else %}No sessions available.{% endif %}</p>
+        {% if module %}
+        <a href="{% url 'session_create' module.mid %}" class="btn btn-success">Create First Session</a>
+        {% elif course %}
+        <a href="{% url 'module_list' course.cid %}" class="btn btn-success">Go to Modules</a>
+        {% else %}
+        <a href="{% url 'course_list' %}" class="btn btn-success">Browse Courses</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% comment %}
+    Pagination placeholder
+    {% endcomment %}
+</div>
+{% endblock %}

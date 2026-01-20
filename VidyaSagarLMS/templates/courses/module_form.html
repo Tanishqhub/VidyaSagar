@@ -1,0 +1,54 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .form-container { margin: 20px auto; max-width: 600px; padding: 20px; }
+    .form-header { background: #f8f9fa; padding: 20px; border-radius: 5px 5px 0 0; margin-bottom: 20px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+    .form-control:focus { border-color: #007bff; outline: none; box-shadow: 0 0 0 2px rgba(0,123,255,0.25); }
+    .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+    .btn-submit { background: #28a745; color: white; }
+    .btn-submit:hover { background: #218838; }
+    .btn-cancel { background: #6c757d; color: white; }
+    .btn-cancel:hover { background: #5a6268; }
+    .error-list { color: #dc3545; margin-top: 5px; font-size: 14px; }
+    .course-info { background: #e9f7fe; padding: 10px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #007bff; }
+</style>
+
+<div class="form-container">
+    <div class="form-header">
+        <h1>{% if form.instance.pk %}Edit Module{% else %}Create New Module{% endif %}</h1>
+        {% if form.initial.course %}
+        <div class="course-info"><strong>Course:</strong> {{ form.initial.course.title }} ({{ form.initial.course.cid }})</div>
+        {% endif %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.m_title.id_for_label }}">{{ form.m_title.label }}</label>
+            {{ form.m_title }}
+            {% if form.m_title.errors %}<div class="error-list">{{ form.m_title.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.no_of_sessions.id_for_label }}">{{ form.no_of_sessions.label }}</label>
+            {{ form.no_of_sessions }}
+            {% if form.no_of_sessions.errors %}<div class="error-list">{{ form.no_of_sessions.errors }}</div>{% endif %}
+            <small style="color: #666;">Enter the total number of sessions in this module</small>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn btn-submit">{% if form.instance.pk %}Update Module{% else %}Create Module{% endif %}</button>
+            {% if form.initial.course %}
+            <a href="{% url 'course_detail' form.initial.course.cid %}" class="btn btn-cancel">Cancel</a>
+            {% else %}
+            <a href="{% url 'course_list' %}" class="btn btn-cancel">Cancel</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

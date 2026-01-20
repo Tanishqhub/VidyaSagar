@@ -1,0 +1,31 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .form-container { margin: 20px; max-width: 500px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; }
+    .btn { padding: 10px 15px; border: none; border-radius: 3px; cursor: pointer; }
+    .btn-submit { background: #28a745; color: white; }
+    .btn-cancel { background: #6c757d; color: white; }
+</style>
+
+<div class="form-container">
+    <h1>{% if form.instance.pk %}Edit{% else %}Create{% endif %} Course</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div style="color: red;">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-submit">Save</button>
+        <a href="{% url 'course_list' %}" class="btn btn-cancel">Cancel</a>
+    </form>
+</div>
+{% endblock %}

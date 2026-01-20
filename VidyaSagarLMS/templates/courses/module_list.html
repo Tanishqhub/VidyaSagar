@@ -1,0 +1,62 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .container { margin: 20px; }
+    .module-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn { padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-right: 5px; border: none; cursor: pointer; display: inline-block; font-size: 14px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-warning { background: #ffc107; color: black; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .header { display: flex; justify-content: space-between; align-items: center; }
+    .badge { background: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 12px; }
+    .messages { margin: 10px 0; }
+    .alert { padding: 10px; border-radius: 4px; margin: 10px 0; }
+    .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+</style>
+
+<div class="container">
+    <div class="header">
+        <h1>{% if course %}Modules for {{ course.title }}{% else %}All Modules{% endif %}</h1>
+        <div>
+            {% if course %}
+                <a href="{% url 'module_create' course.cid %}" class="btn btn-success">+ Add Module</a>
+            {% endif %}
+            <a href="{% url 'course_list' %}" class="btn btn-secondary">← Back to Courses</a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% for module in modules %}
+    <div class="module-card">
+        <h3>{{ module.m_title }}</h3>
+        <p><strong>Sessions:</strong> {{ module.no_of_sessions }}</p>
+        <p><strong>Course:</strong> {{ module.course.title }}</p>
+        <p><strong>Created:</strong> {{ module.course.created_at|date:"M d, Y" }}</p>
+
+        <div style="margin-top: 15px;">
+            <a href="{% url 'module_detail' module.mid %}" class="btn btn-primary">View</a>
+            <a href="{% url 'module_update' module.mid %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'module_delete' module.mid %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'session_create' module.mid %}" class="btn btn-success">Add Session</a>
+        </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 5px;">
+        <h3>No modules found</h3>
+        {% if course %}
+            <a href="{% url 'module_create' course.cid %}" class="btn btn-success">Create First Module</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

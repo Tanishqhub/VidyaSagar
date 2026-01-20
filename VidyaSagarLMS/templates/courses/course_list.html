@@ -1,0 +1,33 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .course-list { margin: 20px; }
+    .course-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; background: #f9f9f9; }
+    .btn { padding: 5px 10px; text-decoration: none; border-radius: 3px; margin-right: 5px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-warning { background: #ffc107; color: black; }
+    .btn-danger { background: #dc3545; color: white; }
+</style>
+
+<div class="course-list">
+    <h1>Courses</h1>
+    <a href="{% url 'course_create' %}" class="btn btn-success">Create New Course</a>
+
+    {% for course in courses %}
+    <div class="course-card">
+        <h3>{{ course.title }} ({{ course.cid }})</h3>
+        <p>Duration: {{ course.duration_days }} days ({{ course.duration_months }} months)</p>
+        <p>Fees: ₹{{ course.fees }}</p>
+        <p>Modules: {{ course.modules.count }}</p>
+        <a href="{% url 'course_detail' course.cid %}" class="btn btn-primary">View</a>
+        <a href="{% url 'course_update' course.cid %}" class="btn btn-warning">Edit</a>
+        <a href="{% url 'course_delete' course.cid %}" class="btn btn-danger">Delete</a>
+        <a href="{% url 'module_list' course.cid %}" class="btn btn-primary">View Modules</a>
+    </div>
+    {% empty %}
+    <p>No courses available.</p>
+    {% endfor %}
+</div>
+{% endblock %}

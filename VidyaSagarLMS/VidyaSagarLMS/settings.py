@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'accounts',
     'dashboard',
     'calendar_app',
+    'courses',
 ]
 
 MIDDLEWARE = [

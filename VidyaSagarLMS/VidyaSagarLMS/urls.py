@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('', include('accounts.urls')),
     path('calendar/', include('calendar_app.urls')),
+    path('courses/', include('courses.urls')),
 ]
 
 if settings.DEBUG:

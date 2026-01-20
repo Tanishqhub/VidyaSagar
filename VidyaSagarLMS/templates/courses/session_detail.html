@@ -1,0 +1,131 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .container { margin: 20px auto; max-width: 800px; padding: 20px; }
+    .session-header { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 30px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid #007bff; }
+    .session-id { background: #007bff; color: white; padding: 8px 16px; border-radius: 25px; font-weight: bold; font-size: 16px; display: inline-block; margin-bottom: 15px; }
+    .module-info, .course-info { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #dee2e6; }
+    .topics-container { background: white; padding: 25px; border-radius: 8px; margin: 25px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .topics-content { line-height: 1.8; font-size: 16px; color: #333; white-space: pre-wrap; padding: 20px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #28a745; }
+    .related-sessions { margin-top: 40px; padding-top: 20px; border-top: 2px solid #f0f0f0; }
+    .related-session-item { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid #e0e0e0; }
+    .related-session-item:hover { background: #f8f9fa; border-color: #007bff; }
+    .btn { padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px; border: none; cursor: pointer; display: inline-block; font-size: 14px; font-weight: 500; transition: all 0.3s; }
+    .btn-primary { background: #007bff; color: white; border: 2px solid #007bff; }
+    .btn-primary:hover { background: #0056b3; border-color: #0056b3; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,123,255,0.3); }
+    .btn-success { background: #28a745; color: white; border: 2px solid #28a745; }
+    .btn-success:hover { background: #1e7e34; border-color: #1e7e34; transform: translateY(-2px); }
+    .btn-warning { background: #ffc107; color: black; border: 2px solid #ffc107; }
+    .btn-warning:hover { background: #e0a800; border-color: #e0a800; transform: translateY(-2px); }
+    .btn-danger { background: #dc3545; color: white; border: 2px solid #dc3545; }
+    .btn-danger:hover { background: #c82333; border-color: #c82333; transform: translateY(-2px); }
+    .btn-secondary { background: #6c757d; color: white; border: 2px solid #6c757d; }
+    .btn-secondary:hover { background: #5a6268; border-color: #5a6268; transform: translateY(-2px); }
+    .btn-outline { background: transparent; border: 2px solid #007bff; color: #007bff; }
+    .btn-outline:hover { background: #007bff; color: white; transform: translateY(-2px); }
+    .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #dee2e6; }
+    .nav-buttons { display: flex; gap: 10px; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+    .info-card { background: white; padding: 15px; border-radius: 5px; border: 1px solid #dee2e6; }
+    .info-label { font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 5px; }
+    .info-value { font-size: 16px; font-weight: bold; color: #333; }
+    .session-navigation { display: flex; justify-content: space-between; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    .empty-state { text-align: center; padding: 30px; background: #f8f9fa; border-radius: 8px; margin: 20px 0; color: #666; }
+    .timestamp { color: #888; font-size: 14px; margin-top: 10px; font-style: italic; }
+</style>
+
+<div class="container">
+    <div class="action-bar">
+        <div class="nav-buttons">
+            <a href="{% url 'module_detail' session.module.mid %}" class="btn btn-secondary">← Back to Module</a>
+            <a href="{% url 'module_session_list' session.module.mid %}" class="btn btn-outline">View All Sessions</a>
+        </div>
+        <div>
+            <a href="{% url 'session_update' session.sid %}" class="btn btn-warning">Edit Session</a>
+            <a href="{% url 'session_delete' session.sid %}" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+
+    <div class="session-header">
+        <div class="session-id">Session {{ session.session_number }}</div>
+        <h1>{{ session.module.m_title }}</h1>
+
+        <div class="info-grid">
+            <div class="info-card"><div class="info-label">Session ID</div><div class="info-value">S{{ session.sid }}</div></div>
+            <div class="info-card"><div class="info-label">Module</div><div class="info-value">{{ session.module.m_title }}</div></div>
+            <div class="info-card"><div class="info-label">Course</div><div class="info-value">{{ session.course.title }}</div></div>
+            <div class="info-card"><div class="info-label">Course ID</div><div class="info-value">{{ session.course.cid }}</div></div>
+        </div>
+    </div>
+
+    <div class="topics-container">
+        <h2 style="margin-top: 0; color: #333;">Topics Covered</h2>
+        <div class="topics-content">{{ session.topics|linebreaks }}</div>
+        {% if session.created_at %}
+        <div class="timestamp">Created: {{ session.created_at|date:"F j, Y, g:i a" }}</div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{% url 'session_update' session.sid %}" class="btn btn-warning">Edit Topics</a>
+        <a href="{% url 'session_create' session.module.mid %}" class="btn btn-success">+ Add New Session</a>
+        <a href="{% url 'module_detail' session.module.mid %}" class="btn btn-primary">View All Module Sessions</a>
+    </div>
+
+    <div class="related-sessions">
+        <h3>Other Sessions in This Module</h3>
+        {% if related_sessions %}
+            {% for related in related_sessions %}
+            <a href="{% url 'session_detail' related.sid %}" style="text-decoration: none; color: inherit;">
+                <div class="related-session-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Session {{ related.session_number }}</strong>
+                            <div style="color: #666; margin-top: 5px;">{{ related.topics|truncatechars:100 }}</div>
+                        </div>
+                        <span style="color: #007bff; font-weight: bold;">→</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <p>No other sessions in this module yet.</p>
+            <a href="{% url 'session_create' session.module.mid %}" class="btn btn-success">Create Another Session</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="session-navigation">
+        <div>
+            {% if related_sessions %}
+                {% with related_sessions.first as first_session %}
+                    {% if first_session.session_number < session.session_number %}
+                    <a href="{% url 'session_detail' first_session.sid %}" class="btn btn-outline">← Previous Session ({{ first_session.session_number }})</a>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        </div>
+        <div>
+            {% if related_sessions %}
+                {% with related_sessions.last as last_session %}
+                    {% if last_session.session_number > session.session_number %}
+                    <a href="{% url 'session_detail' last_session.sid %}" class="btn btn-outline">Next Session ({{ last_session.session_number }}) →</a>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <h4 style="margin-top: 0;">Quick Links</h4>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="{% url 'course_detail' session.course.cid %}" class="btn btn-secondary">View Course</a>
+            <a href="{% url 'module_detail' session.module.mid %}" class="btn btn-secondary">View Module</a>
+            <a href="{% url 'module_session_list' session.module.mid %}" class="btn btn-primary">All Module Sessions</a>
+            <a href="{% url 'course_session_list' session.course.cid %}" class="btn btn-primary">All Course Sessions</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

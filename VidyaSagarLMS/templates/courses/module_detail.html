@@ -1,0 +1,65 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<style>
+    .container { margin: 20px; max-width: 800px; }
+    .module-header { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+    .session-list { margin-top: 20px; }
+    .session-item { border-left: 4px solid #007bff; padding: 15px; margin: 10px 0; background: white; border-radius: 0 5px 5px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .btn { padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-right: 5px; display: inline-block; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-warning { background: #ffc107; color: black; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; }
+    .info-item { padding: 10px; background: white; border-radius: 4px; }
+    .no-sessions { text-align: center; padding: 30px; background: #f8f9fa; border-radius: 5px; margin: 20px 0; }
+</style>
+
+<div class="container">
+    <div class="module-header">
+        <a href="{% url 'course_detail' module.course.cid %}" class="btn btn-secondary">← Back to Course</a>
+        <a href="{% url 'module_list' module.course.cid %}" class="btn btn-secondary">← All Modules</a>
+
+        <h1>{{ module.m_title }}</h1>
+
+        <div class="info-grid">
+            <div class="info-item"><strong>Module ID:</strong> {{ module.mid }}</div>
+            <div class="info-item"><strong>Sessions:</strong> {{ module.no_of_sessions }}</div>
+            <div class="info-item"><strong>Course:</strong> {{ module.course.title }}</div>
+            <div class="info-item"><strong>Course ID:</strong> {{ module.course.cid }}</div>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <a href="{% url 'module_update' module.mid %}" class="btn btn-warning">Edit Module</a>
+            <a href="{% url 'module_delete' module.mid %}" class="btn btn-danger">Delete Module</a>
+            <a href="{% url 'session_create' module.mid %}" class="btn btn-success">+ Add Session</a>
+            <a href="{% url 'module_session_list' module.mid %}" class="btn btn-primary">View All Sessions</a>
+        </div>
+    </div>
+
+    <h2>Sessions ({{ module.sessions.count }})</h2>
+
+    {% if module.sessions.all %}
+    <div class="session-list">
+        {% for session in module.sessions.all %}
+        <div class="session-item">
+            <h4>Session {{ session.session_number }}</h4>
+            <p>{{ session.topics|linebreaks }}</p>
+            <div>
+                <a href="{% url 'session_update' session.sid %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'session_delete' session.sid %}" class="btn btn-danger btn-sm">Delete</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-sessions">
+        <h3>No sessions yet</h3>
+        <p>Add sessions to this module to create a detailed plan.</p>
+        <a href="{% url 'session_create' module.mid %}" class="btn btn-success">Add First Session</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
