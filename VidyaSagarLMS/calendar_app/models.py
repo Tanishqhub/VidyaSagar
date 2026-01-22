@@ -100,7 +100,7 @@ class CourseSchedule(models.Model):
 
 class Attendance(models.Model):
     event = models.ForeignKey(CalendarEvent, on_delete=models.CASCADE)
-    student = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'student'})
+    student = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'student'}, related_name='calendar_attendances')
     attended = models.BooleanField(default=False)
     check_in_time = models.DateTimeField(null=True, blank=True)
     check_out_time = models.DateTimeField(null=True, blank=True)

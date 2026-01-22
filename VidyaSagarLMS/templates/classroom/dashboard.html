@@ -1,0 +1,25 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>Classroom Dashboard</h1>
+</div>
+<div class="row mt-3">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h2>{{ total_classrooms|default:0 }}</h2>
+                <p>Total Classrooms</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h2>{{ total_batches|default:0 }}</h2>
+                <p>Total Batches</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

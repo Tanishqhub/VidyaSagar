@@ -18,9 +18,8 @@ class CoursePermissionMixin:
 
         if getattr(user, 'role', None) in ('superadmin', 'admin'):
             return super().dispatch(request, *args, **kwargs)
-
-        # Allow if session flag set (granted via dashboard button)
-        if request.session.get('course_access'):
+        # Allow if persistent user flag (granted by superadmin) or session flag set
+        if getattr(user, 'course_access', False) or request.session.get('course_access'):
             return super().dispatch(request, *args, **kwargs)
 
         messages.error(request, 'You do not have permission to access courses. Request access from your dashboard.')
@@ -86,7 +85,12 @@ class CourseDeleteView(LoginRequiredMixin, CoursePermissionMixin, DeleteView):
 
 
 def grant_course_access(request):
-    """Grant temporary course access to non-admin users via dashboard button."""
+    """Show request page on GET, grant temporary course access on POST.
+
+    Non-admin users can visit the page to request access (GET) or submit
+    the form (POST) to set a session flag granting course access for
+    the current session.
+    """
     if not request.user.is_authenticated:
         messages.error(request, 'Login required to request access.')
         return redirect('login')
@@ -96,10 +100,13 @@ def grant_course_access(request):
         messages.info(request, 'You already have full course access.')
         return redirect('dashboard')
 
-    # Set a session flag granting access for the session
-    request.session['course_access'] = True
-    messages.success(request, 'Course access granted for this session.')
-    return redirect('dashboard')
+    if request.method == 'POST':
+        request.session['course_access'] = True
+        messages.success(request, 'Course access granted for this session.')
+        return redirect('dashboard')
+
+    # GET -> render a simple request page with a POST form
+    return render(request, 'dashboard/grant_access.html')
 
 # Module Views
 class ModuleListView(ListView):

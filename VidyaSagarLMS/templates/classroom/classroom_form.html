@@ -1,0 +1,149 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>{% if object %}Edit Classroom{% else %}Create Classroom{% endif %}</h1>
+</div>
+<div class="card mt-3">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary">Save</button>
+            <a href="{% url 'classroom_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+<script>
+// Utility to read CSRF token from cookie
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const courseSelect = document.getElementById('id_course');
+    const moduleSelect = document.getElementById('id_modules');
+    const sessionSelect = document.getElementById('id_sessions');
+
+    if (!courseSelect) return;
+
+    courseSelect.addEventListener('change', function () {
+        const courseId = this.value;
+        const csrftoken = getCookie('csrftoken');
+
+        // Fetch modules for the selected course
+        fetch("{% url 'ajax_get_modules' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ course_id: courseId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // data is list of {mid, m_title}
+            if (moduleSelect) {
+                moduleSelect.innerHTML = '';
+                data.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.mid;
+                    opt.text = m.m_title || m.title || (`Module ${m.mid}`);
+                    moduleSelect.appendChild(opt);
+                });
+            }
+        })
+        .catch(err => console.error('Error fetching modules', err));
+
+        // Fetch sessions for the selected course
+        fetch("{% url 'ajax_get_sessions_by_course' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ course_id: courseId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // data is list of {sid, session_number, topics}
+            if (sessionSelect) {
+                sessionSelect.innerHTML = '';
+                data.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.sid;
+                    opt.text = (s.session_number ? ('Session ' + s.session_number + ': ') : '') + (s.topics || s.title || s.sid);
+                    sessionSelect.appendChild(opt);
+                });
+            }
+        })
+        .catch(err => console.error('Error fetching sessions', err));
+    
+        // Trigger module change to refresh sessions if modules are preselected
+        if (moduleSelect) {
+            moduleSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // When modules change, fetch sessions for selected module(s)
+    if (moduleSelect) {
+        moduleSelect.addEventListener('change', function () {
+            const selected = Array.from(this.selectedOptions).map(o => o.value).filter(v => v);
+            const csrftoken = getCookie('csrftoken');
+
+            if (selected.length === 0) {
+                if (sessionSelect) sessionSelect.innerHTML = '';
+                return;
+            }
+
+            // Aggregate sessions from all selected modules
+            const sessionsMap = new Map();
+
+            const fetches = selected.map(moduleId => {
+                return fetch("{% url 'ajax_get_sessions_by_module' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ module_id: moduleId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(s => sessionsMap.set(s.sid, s));
+                })
+                .catch(err => console.error('Error fetching sessions by module', err));
+            });
+
+            Promise.all(fetches).then(() => {
+                if (sessionSelect) {
+                    sessionSelect.innerHTML = '';
+                    Array.from(sessionsMap.values()).forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.sid;
+                        opt.text = (s.session_number ? ('Session ' + s.session_number + ': ') : '') + (s.topics || s.title || s.sid);
+                        sessionSelect.appendChild(opt);
+                    });
+                }
+            });
+        });
+    }
+
+    // On page load, if a course is already selected, trigger change to populate modules/sessions
+    if (courseSelect && courseSelect.value) {
+        courseSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

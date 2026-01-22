@@ -1,0 +1,17 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>{{ classroom.classroom_name }}</h1>
+    <a href="{% url 'classroom_update' classroom.classroom_id %}" class="btn btn-sm btn-primary">Edit</a>
+</div>
+<div class="card mt-3">
+    <div class="card-body">
+        <p><strong>Batch:</strong> {{ classroom.batch.batch_name }}</p>
+        <p><strong>Course:</strong> {{ classroom.course.title }}</p>
+        <p><strong>Trainer:</strong> {{ classroom.trainer.username }}</p>
+        <p><strong>Students:</strong> {{ classroom.current_students }}</p>
+        <p><strong>Available Seats:</strong> {{ classroom.available_seats }}</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>Batch: {{ batch.batch_name }}</h1>
+    <a href="{% url 'batch_update' batch.batch_id %}" class="btn btn-sm btn-primary">Edit</a>
+</div>
+<div class="card mt-3">
+    <div class="card-body">
+        <p><strong>ID:</strong> {{ batch.batch_id }}</p>
+        <p><strong>Start:</strong> {{ batch.start_date }}</p>
+        <p><strong>End:</strong> {{ batch.end_date }}</p>
+        <p><strong>Total Classrooms:</strong> {{ batch.total_classrooms }}</p>
+        <p><strong>Total Students:</strong> {{ batch.total_students }}</p>
+    </div>
+</div>
+{% endblock %}

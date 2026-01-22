@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('calendar/', include('calendar_app.urls')),
     path('courses/', include('courses.urls')),
+    path('classroom/', include('classroom.urls')),
 ]
 
 if settings.DEBUG:

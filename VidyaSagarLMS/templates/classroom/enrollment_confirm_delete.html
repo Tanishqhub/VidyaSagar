@@ -1,0 +1,17 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>Confirm Remove Enrollment</h1>
+</div>
+<div class="card mt-3">
+    <div class="card-body">
+        <p>Are you sure you want to remove enrollment for <strong>{{ object.student.username }}</strong> from <strong>{{ object.classroom.classroom_name }}</strong>?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button class="btn btn-danger">Remove</button>
+            <a href="{% url 'classroom_detail' object.classroom.classroom_id %}" class="btn btn-secondary ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

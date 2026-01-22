@@ -1,0 +1,18 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>My Classrooms</h1>
+</div>
+<div class="card mt-3">
+    <div class="card-body">
+        <ul>
+            {% for c in classrooms %}
+            <li><a href="{% url 'classroom_detail' c.classroom_id %}">{{ c.classroom_name }}</a></li>
+            {% empty %}
+            <li>You are not enrolled in any classrooms.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -101,8 +101,18 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger">Deactivate</button>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="#" class="btn btn-sm btn-outline-danger">Deactivate</a>
+                                <form method="post" action="{% url 'dashboard_grant_access' u.id %}" style="display:inline-block;margin-left:6px;">
+                                    {% csrf_token %}
+                                    {% if u.course_access %}
+                                    <input type="hidden" name="action" value="revoke">
+                                    <button class="btn btn-sm btn-warning">Revoke Access</button>
+                                    {% else %}
+                                    <input type="hidden" name="action" value="grant">
+                                    <button class="btn btn-sm btn-success">Grant Access</button>
+                                    {% endif %}
+                                </form>
                             </td>
                         </tr>
                         {% empty %}
