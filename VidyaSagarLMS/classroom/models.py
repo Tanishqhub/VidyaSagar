@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from courses.models import Course, Module, Session
+import uuid
+from accounts.models import StudentProfile
 
 CustomUser = get_user_model()
 
@@ -180,3 +182,119 @@ class Attendance(models.Model):
     
     def __str__(self):
         return f"{self.student.username} - {self.status} - {self.classroom_session}"
+
+
+CustomUser = get_user_model()
+
+class VirtualClassroom(models.Model):
+    STATUS_CHOICES = [
+        ('scheduled', 'Scheduled'),
+        ('live', 'Live'),
+        ('ended', 'Ended'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    classroom = models.OneToOneField('Classroom', on_delete=models.CASCADE, related_name='virtual_classroom')
+    meeting_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    meeting_password = models.CharField(max_length=50, blank=True)
+    meeting_url = models.URLField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
+    scheduled_start = models.DateTimeField()
+    scheduled_end = models.DateTimeField()
+    actual_start = models.DateTimeField(null=True, blank=True)
+    actual_end = models.DateTimeField(null=True, blank=True)
+    max_participants = models.IntegerField(default=50)
+    recording_url = models.URLField(blank=True)
+    whiteboard_enabled = models.BooleanField(default=True)
+    chat_enabled = models.BooleanField(default=True)
+    screen_sharing_enabled = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-scheduled_start']
+    
+    def __str__(self):
+        return f"Virtual: {self.classroom.classroom_name}"
+    
+    @property
+    def is_live(self):
+        return self.status == 'live'
+    
+    @property
+    def duration_minutes(self):
+        if self.actual_start and self.actual_end:
+            duration = self.actual_end - self.actual_start
+            return duration.total_seconds() // 60
+        return None
+
+class ClassroomParticipant(models.Model):
+    ROLE_CHOICES = [
+        ('host', 'Host'),
+        ('co-host', 'Co-Host'),
+        ('participant', 'Participant'),
+    ]
+    
+    virtual_classroom = models.ForeignKey(VirtualClassroom, on_delete=models.CASCADE, related_name='participants')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='virtual_classrooms')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='participant')
+    join_time = models.DateTimeField(null=True, blank=True)
+    leave_time = models.DateTimeField(null=True, blank=True)
+    is_present = models.BooleanField(default=False)
+    raise_hand = models.BooleanField(default=False)
+    is_muted = models.BooleanField(default=False)
+    video_enabled = models.BooleanField(default=False)
+    
+    class Meta:
+        unique_together = ['virtual_classroom', 'user']
+    
+    def __str__(self):
+        return f"{self.user.username} in {self.virtual_classroom}"
+
+class Whiteboard(models.Model):
+    virtual_classroom = models.OneToOneField(VirtualClassroom, on_delete=models.CASCADE, related_name='whiteboard')
+    canvas_data = models.TextField(blank=True)  # JSON data for whiteboard
+    last_modified = models.DateTimeField(auto_now=True)
+    last_modified_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+    
+    def __str__(self):
+        return f"Whiteboard for {self.virtual_classroom}"
+
+class ChatMessage(models.Model):
+    virtual_classroom = models.ForeignKey(VirtualClassroom, on_delete=models.CASCADE, related_name='messages')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_system = models.BooleanField(default=False)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    
+    class Meta:
+        ordering = ['timestamp']
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.message[:50]}"
+
+class ScreenRecording(models.Model):
+    virtual_classroom = models.ForeignKey(VirtualClassroom, on_delete=models.CASCADE, related_name='recordings')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    recording_url = models.URLField()
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    file_size = models.IntegerField(help_text="File size in MB")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Recording by {self.user.username} for {self.virtual_classroom}"
+
+class BreakoutRoom(models.Model):
+    virtual_classroom = models.ForeignKey(VirtualClassroom, on_delete=models.CASCADE, related_name='breakout_rooms')
+    room_name = models.CharField(max_length=100)
+    room_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    host = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='hosted_breakout_rooms')
+    participants = models.ManyToManyField(CustomUser, related_name='breakout_rooms', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.room_name} in {self.virtual_classroom}"

@@ -1,0 +1,696 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        {% if whiteboard_enabled %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Interactive Whiteboard</h5>
+                <div class="d-flex flex-wrap gap-2 mb-3" id="whiteboard-tools">
+                    {% if is_trainer %}
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <!-- Drawing Tools -->
+                        <button class="btn btn-outline-primary btn-sm tool-btn active" data-tool="pen">
+                            <i class="fas fa-pen"></i> Pen
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm tool-btn" data-tool="eraser">
+                            <i class="fas fa-eraser"></i> Eraser
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm tool-btn" data-tool="line">
+                            <i class="fas fa-minus"></i> Line
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm tool-btn" data-tool="rectangle">
+                            <i class="fas fa-square"></i> Rectangle
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm tool-btn" data-tool="circle">
+                            <i class="fas fa-circle"></i> Circle
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm tool-btn" data-tool="arrow">
+                            <i class="fas fa-arrow-right"></i> Arrow
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm tool-btn" data-tool="text">
+                            <i class="fas fa-font"></i> Text
+                        </button>
+                        
+                        <!-- Color Picker -->
+                        <div class="input-group input-group-sm" style="width: 120px;">
+                            <span class="input-group-text"><i class="fas fa-palette"></i></span>
+                            <input type="color" class="form-control form-control-color" id="color-picker" value="#000000" title="Choose drawing color">
+                        </div>
+                        
+                        <!-- Line Width -->
+                        <div class="input-group input-group-sm" style="width: 150px;">
+                            <span class="input-group-text"><i class="fas fa-sliders-h"></i></span>
+                            <input type="range" class="form-range" id="line-width" min="1" max="20" value="2">
+                            <span class="input-group-text" id="line-width-value">2px</span>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <button id="wb-clear" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                        <button id="wb-undo" class="btn btn-warning btn-sm">
+                            <i class="fas fa-undo"></i> Undo
+                        </button>
+                        <button id="wb-save" class="btn btn-success btn-sm">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="text-muted">
+                        <i class="fas fa-eye"></i> View Only Mode - Only the trainer can annotate
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Whiteboard Container with Scroll -->
+                <div class="whiteboard-container" style="border: 2px solid #2c3e50; border-radius: 8px; overflow: auto; background: #f8f9fa;">
+                    <div style="position: relative; width: 1000px; height: 800px; background: #ffffff; box-shadow: inset 0 0 20px rgba(0,0,0,0.1);">
+                        <!-- Grid Background -->
+                        <canvas id="grid-canvas" width="1000" height="800" 
+                                style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+                        
+                        <!-- Main Drawing Canvas -->
+                        <canvas id="whiteboard-canvas" width="1000" height="800" 
+                                style="position: absolute; top: 0; left: 0;"></canvas>
+                        
+                        <!-- Temporary Canvas for Preview -->
+                        <canvas id="temp-canvas" width="1000" height="800" 
+                                style="position: absolute; top: 0; left: 0; pointer-events: none; display: none;"></canvas>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <div class="text-muted small">
+                        <i class="fas fa-info-circle"></i> 
+                        {% if is_trainer %}
+                        Use the tools above to draw, add shapes, and write text. Changes are auto-saved.
+                        {% else %}
+                        You are viewing the whiteboard in real-time. Only the trainer can make changes.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h4>{{ virtual_classroom.classroom.classroom_name }} <small class="text-muted">• Live</small></h4>
+                    <p>Meeting ID: {{ virtual_classroom.meeting_id }}</p>
+                    <div id="video-area" class="border rounded"
+                        style="height:60vh; background:#000; display:flex;align-items:center;justify-content:center;">
+                        <span class="text-white">Video / Screen Area</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Participants</h5>
+                    <div id="participants-list">
+                        {% for p in participants %}
+                        <div class="d-flex justify-content-between align-items-center py-1">
+                            <div>{{ p.user.get_full_name|default:p.user.username }} <small class="text-muted">({{ p.role }})</small></div>
+                        </div>
+                        {% empty %}
+                        <div class="text-muted">No participants yet</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5>Chat</h5>
+                    <div id="chat-messages" style="height:300px; overflow:auto;" class="mb-2">
+                        {% for msg in chat_messages %}
+                        <div><strong>{{ msg.user.username }}</strong>: {{ msg.message }} <small class="text-muted">{{ msg.timestamp|time:'H:i' }}</small></div>
+                        {% endfor %}
+                    </div>
+                    <div class="input-group">
+                        <input id="chat-input" class="form-control" placeholder="Type a message...">
+                        <button id="send-chat" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.whiteboard-container {
+    max-height: 85vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 10px;
+}
+
+.tool-btn.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+#whiteboard-canvas {
+    cursor: crosshair;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+#grid-canvas {
+    opacity: 0.1;
+}
+
+.tool-btn {
+    min-width: 80px;
+}
+</style>
+
+<script>
+    const meetingId = '{{ virtual_classroom.meeting_id }}';
+    const chatEnabled = {% if virtual_classroom.chat_enabled %}true{% else %}false{% endif %};
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Chat functionality remains the same
+    async function fetchChat() {
+        try {
+            const res = await fetch('{% url "get_chat_messages" virtual_classroom.meeting_id %}');
+            const data = await res.json();
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            for (const m of data.messages) {
+                const div = document.createElement('div');
+                div.innerHTML = `<strong>${m.user.username}</strong>: ${m.message} <small class="text-muted">${m.timestamp}</small>`;
+                container.appendChild(div);
+            }
+            container.scrollTop = container.scrollHeight;
+        } catch (e) { 
+            console.error('Error fetching chat:', e); 
+        }
+    }
+
+    document.getElementById('send-chat').addEventListener('click', async () => {
+        const txt = document.getElementById('chat-input').value.trim();
+        if (!txt) return;
+        
+        try {
+            await fetch('{% url "send_chat_message" virtual_classroom.meeting_id %}', {
+                method: 'POST',
+                headers: { 
+                    'X-CSRFToken': getCookie('csrftoken'), 
+                    'Content-Type': 'application/x-www-form-urlencoded' 
+                },
+                body: `message=${encodeURIComponent(txt)}`
+            });
+            document.getElementById('chat-input').value = '';
+            fetchChat();
+        } catch (e) {
+            console.error('Error sending chat:', e);
+        }
+    });
+
+    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('send-chat').click();
+        }
+    });
+
+    if (chatEnabled) { 
+        fetchChat(); 
+        setInterval(fetchChat, 5000); 
+    }
+</script>
+
+{% if whiteboard_enabled %}
+<script>
+    const isTrainer = {% if is_trainer %}true{% else %}false{% endif %};
+    const existingCanvas = '{{ whiteboard.canvas_data|escapejs }}';
+    const wbUrl = '{% url "update_whiteboard" virtual_classroom.meeting_id %}';
+    
+    let whiteboardState = {
+        tool: 'pen',
+        color: '#000000',
+        lineWidth: 2,
+        isDrawing: false,
+        startX: 0,
+        startY: 0,
+        history: [],
+        historyIndex: -1
+    };
+
+    function initWhiteboard() {
+        const canvas = document.getElementById('whiteboard-canvas');
+        const gridCanvas = document.getElementById('grid-canvas');
+        const tempCanvas = document.getElementById('temp-canvas');
+        
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const gridCtx = gridCanvas.getContext('2d');
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Draw grid background
+        drawGrid(gridCtx);
+        
+        // Load existing whiteboard data
+        if (existingCanvas && existingCanvas !== 'None' && existingCanvas !== '') {
+            try {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    saveState();
+                };
+                img.src = existingCanvas;
+            } catch (e) {
+                console.error('Error loading whiteboard:', e);
+            }
+        } else {
+            // Set initial background color
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
+        }
+        
+        // Tool selection
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                whiteboardState.tool = btn.dataset.tool;
+                updateCursor();
+            });
+        });
+        
+        // Color picker
+        document.getElementById('color-picker').addEventListener('input', (e) => {
+            whiteboardState.color = e.target.value;
+        });
+        
+        // Line width
+        const lineWidthSlider = document.getElementById('line-width');
+        const lineWidthValue = document.getElementById('line-width-value');
+        lineWidthSlider.addEventListener('input', (e) => {
+            whiteboardState.lineWidth = parseInt(e.target.value);
+            lineWidthValue.textContent = whiteboardState.lineWidth + 'px';
+        });
+        
+        // Action buttons
+        document.getElementById('wb-clear').addEventListener('click', () => {
+            if (confirm('Clear the entire whiteboard?')) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                saveState();
+                autoSave();
+            }
+        });
+        
+        document.getElementById('wb-undo').addEventListener('click', () => {
+            undo();
+        });
+        
+        document.getElementById('wb-save').addEventListener('click', () => {
+            manualSave();
+        });
+        
+        // Set initial cursor
+        updateCursor();
+        
+        if (isTrainer) {
+            // Drawing functionality
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+            
+            // Show temp canvas for shape previews
+            tempCanvas.style.display = 'block';
+        } else {
+            // View only mode
+            canvas.style.cursor = 'default';
+            canvas.style.pointerEvents = 'none';
+        }
+        
+        function drawGrid(context) {
+            context.strokeStyle = '#cccccc';
+            context.lineWidth = 0.5;
+            
+            // Vertical lines
+            for (let x = 0; x <= canvas.width; x += 20) {
+                context.beginPath();
+                context.moveTo(x, 0);
+                context.lineTo(x, canvas.height);
+                context.stroke();
+            }
+            
+            // Horizontal lines
+            for (let y = 0; y <= canvas.height; y += 20) {
+                context.beginPath();
+                context.moveTo(0, y);
+                context.lineTo(canvas.width, y);
+                context.stroke();
+            }
+        }
+        
+        function updateCursor() {
+            if (!isTrainer) return;
+            
+            switch(whiteboardState.tool) {
+                case 'pen':
+                    canvas.style.cursor = 'crosshair';
+                    break;
+                case 'eraser':
+                    canvas.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="${whiteboardState.lineWidth * 3}" height="${whiteboardState.lineWidth * 3}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="white" stroke="gray" stroke-width="2"/></svg>') ${whiteboardState.lineWidth * 1.5} ${whiteboardState.lineWidth * 1.5}, auto`;
+                    break;
+                case 'line':
+                case 'rectangle':
+                case 'circle':
+                case 'arrow':
+                    canvas.style.cursor = 'crosshair';
+                    break;
+                case 'text':
+                    canvas.style.cursor = 'text';
+                    break;
+                default:
+                    canvas.style.cursor = 'default';
+            }
+        }
+        
+        function startDrawing(e) {
+            if (!isTrainer) return;
+            
+            whiteboardState.isDrawing = true;
+            whiteboardState.startX = e.offsetX;
+            whiteboardState.startY = e.offsetY;
+            
+            if (whiteboardState.tool === 'pen') {
+                ctx.beginPath();
+                ctx.moveTo(e.offsetX, e.offsetY);
+                ctx.strokeStyle = whiteboardState.color;
+                ctx.lineWidth = whiteboardState.lineWidth;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            } else if (whiteboardState.tool === 'eraser') {
+                ctx.beginPath();
+                ctx.moveTo(e.offsetX, e.offsetY);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = whiteboardState.lineWidth * 3;
+                ctx.lineCap = 'round';
+            } else if (whiteboardState.tool === 'text') {
+                const text = prompt('Enter text:', 'Type here');
+                if (text) {
+                    ctx.font = `${whiteboardState.lineWidth * 5}px Arial`;
+                    ctx.fillStyle = whiteboardState.color;
+                    ctx.fillText(text, e.offsetX, e.offsetY);
+                    saveState();
+                    autoSave();
+                }
+                whiteboardState.isDrawing = false;
+            }
+        }
+        
+        function draw(e) {
+            if (!whiteboardState.isDrawing || !isTrainer) return;
+            
+            const currentX = e.offsetX;
+            const currentY = e.offsetY;
+            
+            switch(whiteboardState.tool) {
+                case 'pen':
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+                    break;
+                    
+                case 'eraser':
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+                    break;
+                    
+                case 'line':
+                    drawLinePreview(currentX, currentY);
+                    break;
+                    
+                case 'rectangle':
+                    drawRectanglePreview(currentX, currentY);
+                    break;
+                    
+                case 'circle':
+                    drawCirclePreview(currentX, currentY);
+                    break;
+                    
+                case 'arrow':
+                    drawArrowPreview(currentX, currentY);
+                    break;
+            }
+        }
+        
+        function stopDrawing(e) {
+            if (!whiteboardState.isDrawing || !isTrainer) return;
+            
+            const currentX = e ? e.offsetX : whiteboardState.startX;
+            const currentY = e ? e.offsetY : whiteboardState.startY;
+            
+            // Draw final shape if using shape tools
+            if (whiteboardState.isDrawing && whiteboardState.tool !== 'pen' && whiteboardState.tool !== 'eraser') {
+                switch(whiteboardState.tool) {
+                    case 'line':
+                        drawFinalLine(currentX, currentY);
+                        break;
+                    case 'rectangle':
+                        drawFinalRectangle(currentX, currentY);
+                        break;
+                    case 'circle':
+                        drawFinalCircle(currentX, currentY);
+                        break;
+                    case 'arrow':
+                        drawFinalArrow(currentX, currentY);
+                        break;
+                }
+            }
+            
+            // Clear preview
+            tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            whiteboardState.isDrawing = false;
+            
+            // Save state for pen and eraser (shapes are saved in their final drawing functions)
+            if (whiteboardState.tool === 'pen' || whiteboardState.tool === 'eraser') {
+                saveState();
+                autoSave();
+            }
+        }
+        
+        function drawLinePreview(x, y) {
+            tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.beginPath();
+            tempCtx.moveTo(whiteboardState.startX, whiteboardState.startY);
+            tempCtx.lineTo(x, y);
+            tempCtx.strokeStyle = whiteboardState.color;
+            tempCtx.lineWidth = whiteboardState.lineWidth;
+            tempCtx.stroke();
+        }
+        
+        function drawFinalLine(x, y) {
+            ctx.beginPath();
+            ctx.moveTo(whiteboardState.startX, whiteboardState.startY);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = whiteboardState.color;
+            ctx.lineWidth = whiteboardState.lineWidth;
+            ctx.stroke();
+            saveState();
+            autoSave();
+        }
+        
+        function drawRectanglePreview(x, y) {
+            tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+            const width = x - whiteboardState.startX;
+            const height = y - whiteboardState.startY;
+            
+            tempCtx.strokeStyle = whiteboardState.color;
+            tempCtx.lineWidth = whiteboardState.lineWidth;
+            tempCtx.strokeRect(whiteboardState.startX, whiteboardState.startY, width, height);
+        }
+        
+        function drawFinalRectangle(x, y) {
+            const width = x - whiteboardState.startX;
+            const height = y - whiteboardState.startY;
+            
+            ctx.strokeStyle = whiteboardState.color;
+            ctx.lineWidth = whiteboardState.lineWidth;
+            ctx.strokeRect(whiteboardState.startX, whiteboardState.startY, width, height);
+            saveState();
+            autoSave();
+        }
+        
+        function drawCirclePreview(x, y) {
+            tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+            const radius = Math.sqrt(
+                Math.pow(x - whiteboardState.startX, 2) + 
+                Math.pow(y - whiteboardState.startY, 2)
+            );
+            
+            tempCtx.beginPath();
+            tempCtx.arc(whiteboardState.startX, whiteboardState.startY, radius, 0, Math.PI * 2);
+            tempCtx.strokeStyle = whiteboardState.color;
+            tempCtx.lineWidth = whiteboardState.lineWidth;
+            tempCtx.stroke();
+        }
+        
+        function drawFinalCircle(x, y) {
+            const radius = Math.sqrt(
+                Math.pow(x - whiteboardState.startX, 2) + 
+                Math.pow(y - whiteboardState.startY, 2)
+            );
+            
+            ctx.beginPath();
+            ctx.arc(whiteboardState.startX, whiteboardState.startY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = whiteboardState.color;
+            ctx.lineWidth = whiteboardState.lineWidth;
+            ctx.stroke();
+            saveState();
+            autoSave();
+        }
+        
+        function drawArrowPreview(x, y) {
+            tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Draw arrow line
+            tempCtx.beginPath();
+            tempCtx.moveTo(whiteboardState.startX, whiteboardState.startY);
+            tempCtx.lineTo(x, y);
+            tempCtx.strokeStyle = whiteboardState.color;
+            tempCtx.lineWidth = whiteboardState.lineWidth;
+            tempCtx.stroke();
+            
+            // Draw arrow head
+            drawArrowHead(tempCtx, whiteboardState.startX, whiteboardState.startY, x, y);
+        }
+        
+        function drawFinalArrow(x, y) {
+            // Draw arrow line
+            ctx.beginPath();
+            ctx.moveTo(whiteboardState.startX, whiteboardState.startY);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = whiteboardState.color;
+            ctx.lineWidth = whiteboardState.lineWidth;
+            ctx.stroke();
+            
+            // Draw arrow head
+            drawArrowHead(ctx, whiteboardState.startX, whiteboardState.startY, x, y);
+            saveState();
+            autoSave();
+        }
+        
+        function drawArrowHead(context, fromX, fromY, toX, toY) {
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            const headLength = 15;
+            
+            context.save();
+            context.beginPath();
+            context.moveTo(toX, toY);
+            context.lineTo(
+                toX - headLength * Math.cos(angle - Math.PI / 6),
+                toY - headLength * Math.sin(angle - Math.PI / 6)
+            );
+            context.moveTo(toX, toY);
+            context.lineTo(
+                toX - headLength * Math.cos(angle + Math.PI / 6),
+                toY - headLength * Math.sin(angle + Math.PI / 6)
+            );
+            context.strokeStyle = whiteboardState.color;
+            context.lineWidth = whiteboardState.lineWidth;
+            context.stroke();
+            context.restore();
+        }
+        
+        function saveState() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            whiteboardState.history = whiteboardState.history.slice(0, whiteboardState.historyIndex + 1);
+            whiteboardState.history.push(imageData);
+            whiteboardState.historyIndex++;
+            
+            // Limit history to 50 states
+            if (whiteboardState.history.length > 50) {
+                whiteboardState.history.shift();
+                whiteboardState.historyIndex--;
+            }
+        }
+        
+        function undo() {
+            if (whiteboardState.historyIndex > 0) {
+                whiteboardState.historyIndex--;
+                const imageData = whiteboardState.history[whiteboardState.historyIndex];
+                ctx.putImageData(imageData, 0, 0);
+                autoSave();
+            }
+        }
+        
+        async function autoSave() {
+            if (!isTrainer) return;
+            
+            try {
+                const data = canvas.toDataURL('image/png');
+                await fetch(wbUrl, {
+                    method: 'POST',
+                    headers: { 
+                        'X-CSRFToken': getCookie('csrftoken'), 
+                        'Content-Type': 'application/x-www-form-urlencoded' 
+                    },
+                    body: `canvas_data=${encodeURIComponent(data)}&autosave=true`
+                });
+            } catch (e) {
+                console.error('Auto-save error:', e);
+            }
+        }
+        
+        async function manualSave() {
+            if (!isTrainer) return;
+            
+            try {
+                const data = canvas.toDataURL('image/png');
+                const response = await fetch(wbUrl, {
+                    method: 'POST',
+                    headers: { 
+                        'X-CSRFToken': getCookie('csrftoken'), 
+                        'Content-Type': 'application/x-www-form-urlencoded' 
+                    },
+                    body: `canvas_data=${encodeURIComponent(data)}`
+                });
+                
+                if (response.ok) {
+                    alert('Whiteboard saved successfully!');
+                } else {
+                    alert('Error saving whiteboard');
+                }
+            } catch (e) {
+                console.error('Save error:', e);
+                alert('Error saving whiteboard');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initWhiteboard);
+</script>
+{% endif %}
+
+{% endblock %}

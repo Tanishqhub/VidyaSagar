@@ -35,4 +35,19 @@ urlpatterns = [
     
     # Student specific
     path('student/my-classrooms/', views.StudentClassroomListView.as_view(), name='student_classrooms'),
+
+    # Virtual Classroom URLs
+    path('virtual/<uuid:pk>/', views.VirtualClassroomDetailView.as_view(), name='virtual_classroom_detail'),
+    path('<str:pk>/virtual/create/', views.VirtualClassroomCreateView.as_view(), name='virtual_classroom_create'),
+    path('virtual/<uuid:pk>/join/', views.JoinVirtualClassroomView.as_view(), name='join_virtual_classroom'),
+    path('virtual/<uuid:pk>/live/', views.LiveClassroomView.as_view(), name='virtual_classroom_live'),
+    path('virtual/<uuid:pk>/end/', views.EndMeetingView.as_view(), name='end_virtual_classroom'),
+    
+    # Real-time AJAX URLs
+    path('virtual/<uuid:pk>/whiteboard/update/', views.update_whiteboard, name='update_whiteboard'),
+    path('virtual/<uuid:pk>/chat/send/', views.send_chat_message, name='send_chat_message'),
+    path('virtual/<uuid:pk>/participant/update/', views.update_participant_status, name='update_participant_status'),
+    path('virtual/<uuid:pk>/breakout/create/', views.create_breakout_room, name='create_breakout_room'),
+    path('virtual/<uuid:pk>/chat/messages/', views.get_chat_messages, name='get_chat_messages'),
+    path('virtual/<uuid:pk>/participants/', views.get_participants, name='get_participants'),
 ]

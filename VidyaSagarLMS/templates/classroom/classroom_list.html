@@ -8,7 +8,18 @@
 <div class="card mt-3">
     <div class="card-body">
         <table class="table">
-            <thead><tr><th>ID</th><th>Name</th><th>Batch</th><th>Course</th><th>Trainer</th><th>Actions</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Batch</th>
+                    <th>Course</th>
+                    <th>Trainer</th>
+                    <th>Status</th>
+                    <th>Virtual</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for c in classrooms %}
                 <tr>
@@ -18,12 +29,37 @@
                     <td>{{ c.course.title }}</td>
                     <td>{{ c.trainer.username }}</td>
                     <td>
-                        <a href="{% url 'classroom_update' c.classroom_id %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                        <a href="{% url 'classroom_delete' c.classroom_id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        <span class="badge badge-{% if c.status == 'ongoing' %}success{% elif c.status == 'planned' %}info{% elif c.status == 'completed' %}secondary{% else %}warning{% endif %}">
+                            {{ c.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if c.virtual_classroom %}
+                            {% if c.virtual_classroom.status == 'live' %}
+                                <a href="{% url 'join_virtual_classroom' c.virtual_classroom.meeting_id %}" 
+                                   class="btn btn-sm btn-success">Join Live</a>
+                            {% elif c.virtual_classroom.status == 'scheduled' %}
+                                <a href="{% url 'virtual_classroom_detail' c.virtual_classroom.meeting_id %}" 
+                                   class="btn btn-sm btn-info">View Scheduled</a>
+                            {% elif c.virtual_classroom.status == 'ended' %}
+                                <a href="{% url 'virtual_classroom_detail' c.virtual_classroom.meeting_id %}" 
+                                   class="btn btn-sm btn-secondary">View Recording</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'virtual_classroom_create' c.classroom_id %}" 
+                               class="btn btn-sm btn-outline-primary">Create Virtual</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'classroom_detail' c.classroom_id %}" class="btn btn-sm btn-outline-info">View</a>
+                            <a href="{% url 'classroom_update' c.classroom_id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{% url 'classroom_delete' c.classroom_id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6">No classrooms found.</td></tr>
+                <tr><td colspan="8">No classrooms found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

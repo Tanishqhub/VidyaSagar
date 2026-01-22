@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from courses.models import Course, Module, Session
-from .models import Batch, Classroom, ClassroomEnrollment, ClassroomSession, Attendance
+from .models import Batch, BreakoutRoom, Classroom, ClassroomEnrollment, ClassroomSession, Attendance, VirtualClassroom, ChatMessage
 
 CustomUser = get_user_model()
 
@@ -220,3 +220,53 @@ class ModuleSessionFilterForm(forms.Form):
         queryset=Module.objects.none(),
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_module_filter'})
     )
+
+# classroom/forms.py (add these)
+class VirtualClassroomForm(forms.ModelForm):
+    class Meta:
+        model = VirtualClassroom
+        fields = [
+            'scheduled_start', 'scheduled_end', 'meeting_password',
+            'max_participants', 'whiteboard_enabled', 'chat_enabled',
+            'screen_sharing_enabled'
+        ]
+        widgets = {
+            'scheduled_start': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'scheduled_end': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'meeting_password': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional password'}),
+            'max_participants': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 100}),
+            'whiteboard_enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'chat_enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'screen_sharing_enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+class JoinMeetingForm(forms.Form):
+    meeting_password = forms.CharField(
+        max_length=50,
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Meeting Password (if any)'})
+    )
+
+class ChatMessageForm(forms.ModelForm):
+    class Meta:
+        model = ChatMessage
+        fields = ['message']
+        widgets = {
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Type your message here...',
+                'style': 'resize: none;'
+            }),
+        }
+
+class BreakoutRoomForm(forms.ModelForm):
+    class Meta:
+        model = BreakoutRoom
+        fields = ['room_name']
+        widgets = {
+            'room_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter breakout room name'
+            }),
+        }

@@ -3,7 +3,18 @@
 {% block content %}
 <div class="header">
     <h1>{{ classroom.classroom_name }}</h1>
-    <a href="{% url 'classroom_update' classroom.classroom_id %}" class="btn btn-sm btn-primary">Edit</a>
+        <div class="btn-group">
+            <a href="{% url 'classroom_update' classroom.classroom_id %}" class="btn btn-sm btn-primary">Edit</a>
+            {% if classroom.virtual_classroom %}
+                {% if classroom.virtual_classroom.status == 'live' %}
+                    <a href="{% url 'virtual_classroom_live' classroom.virtual_classroom.meeting_id %}" class="btn btn-sm btn-success">Join Live</a>
+                {% else %}
+                    <a href="{% url 'virtual_classroom_detail' classroom.virtual_classroom.meeting_id %}" class="btn btn-sm btn-info">View Virtual Classroom</a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'virtual_classroom_create' classroom.classroom_id %}" class="btn btn-sm btn-outline-secondary">Create Virtual Classroom</a>
+            {% endif %}
+        </div>
 </div>
 <div class="card mt-3">
     <div class="card-body">
