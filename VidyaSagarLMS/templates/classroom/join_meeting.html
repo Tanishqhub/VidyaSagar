@@ -1,0 +1,27 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="max-width:700px;">
+  <div class="card">
+    <div class="card-body">
+      <h4>Join Meeting: {{ virtual_classroom.classroom.classroom_name }}</h4>
+      <p>Meeting ID: {{ virtual_classroom.meeting_id }}</p>
+
+      <form method="post">
+        {% csrf_token %}
+        {% if requires_password %}
+          <div class="mb-3">
+            <label class="form-label">Meeting Password</label>
+            {{ form.meeting_password }}
+          </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Join</button>
+          <a href="{% url 'classroom_detail' virtual_classroom.classroom.classroom_id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

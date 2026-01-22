@@ -18,6 +18,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import classroom.routing
+
+application = ProtocolTypeRouter({
+    'websocket': AuthMiddlewareStack(
+        URLRouter(
+            classroom.routing.websocket_urlpatterns
+        )
+    ),
+})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,6 +36,7 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('calendar/', include('calendar_app.urls')),
     path('courses/', include('courses.urls')),
+    path('classroom/', include('classroom.urls')),
 ]
 
 if settings.DEBUG:

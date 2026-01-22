@@ -1,0 +1,17 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>Confirm Delete Batch</h1>
+</div>
+<div class="card mt-3">
+    <div class="card-body">
+        <p>Are you sure you want to delete batch <strong>{{ object.batch_name }}</strong>?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button class="btn btn-danger">Delete</button>
+            <a href="{% url 'batch_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

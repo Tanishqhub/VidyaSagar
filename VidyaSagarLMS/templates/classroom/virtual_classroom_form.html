@@ -1,0 +1,166 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="header">
+        <h1>Create Virtual Classroom</h1>
+        <a href="{% url 'classroom_detail' classroom.classroom_id %}" class="btn btn-sm btn-secondary">← Back to Classroom</a>
+    </div>
+    
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Classroom Information</h4>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Classroom ID:</th>
+                            <td>{{ classroom.classroom_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Classroom Name:</th>
+                            <td>{{ classroom.classroom_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Course:</th>
+                            <td>{{ classroom.course.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>Trainer:</th>
+                            <td>{{ classroom.trainer.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Students:</th>
+                            <td>{{ classroom.current_students }} / {{ classroom.max_students }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4>Virtual Classroom Setup</h4>
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="{{ form.scheduled_start.id_for_label }}">Scheduled Start *</label>
+                            {{ form.scheduled_start }}
+                            {% if form.scheduled_start.errors %}
+                            <div class="text-danger">{{ form.scheduled_start.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.scheduled_end.id_for_label }}">Scheduled End *</label>
+                            {{ form.scheduled_end }}
+                            {% if form.scheduled_end.errors %}
+                            <div class="text-danger">{{ form.scheduled_end.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.meeting_password.id_for_label }}">Meeting Password (Optional)</label>
+                            {{ form.meeting_password }}
+                            <small class="form-text text-muted">Leave blank for auto-generated password</small>
+                            {% if form.meeting_password.errors %}
+                            <div class="text-danger">{{ form.meeting_password.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.max_participants.id_for_label }}">Maximum Participants</label>
+                            {{ form.max_participants }}
+                            <small class="form-text text-muted">Maximum: 100 participants</small>
+                            {% if form.max_participants.errors %}
+                            <div class="text-danger">{{ form.max_participants.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            {{ form.whiteboard_enabled }}
+                            <label class="form-check-label" for="{{ form.whiteboard_enabled.id_for_label }}">
+                                Enable Whiteboard
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            {{ form.chat_enabled }}
+                            <label class="form-check-label" for="{{ form.chat_enabled.id_for_label }}">
+                                Enable Chat
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.screen_sharing_enabled }}
+                            <label class="form-check-label" for="{{ form.screen_sharing_enabled.id_for_label }}">
+                                Enable Screen Sharing
+                            </label>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Create Virtual Classroom</button>
+                            <a href="{% url 'classroom_detail' classroom.classroom_id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5>Upcoming Classroom Sessions</h5>
+        </div>
+        <div class="card-body">
+            {% if classroom.classroom_sessions.all %}
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Session</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in classroom.classroom_sessions.all %}
+                    <tr>
+                        <td>{{ session.session }}</td>
+                        <td>{{ session.scheduled_date }}</td>
+                        <td>{{ session.scheduled_time }}</td>
+                        <td>
+                            {% if session.is_completed %}
+                            <span class="badge badge-success">Completed</span>
+                            {% else %}
+                            <span class="badge badge-info">Upcoming</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No sessions scheduled for this classroom.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .form-check-input {
+        margin-right: 8px;
+    }
+    
+    .badge {
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}

@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from accounts.models import CustomUser, StudentProfile, TrainerProfile
+from django.contrib import messages
+from django.shortcuts import get_object_or_404
 
 @login_required
 def dashboard_view(request):
@@ -64,3 +66,27 @@ def dashboard_view(request):
     
     else:
         return redirect('login')
+
+
+@login_required
+def grant_user_course_access(request, user_id):
+    """Allow superadmin to grant or revoke persistent course access for a user."""
+    if request.method != 'POST':
+        return redirect('dashboard')
+
+    if getattr(request.user, 'role', None) != 'superadmin':
+        messages.error(request, 'Permission denied.')
+        return redirect('dashboard')
+
+    target = get_object_or_404(CustomUser, pk=user_id)
+    # Toggle access based on posted action, default to grant
+    action = request.POST.get('action', 'grant')
+    if action == 'revoke':
+        target.course_access = False
+        messages.success(request, f'Course access revoked for {target.username}.')
+    else:
+        target.course_access = True
+        messages.success(request, f'Course access granted for {target.username}.')
+
+    target.save()
+    return redirect('dashboard')

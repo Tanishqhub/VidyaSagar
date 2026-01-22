@@ -1,0 +1,17 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="header">
+    <h1>{% if object %}Edit Batch{% else %}Create Batch{% endif %}</h1>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary">Save</button>
+            <a href="{% url 'batch_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
